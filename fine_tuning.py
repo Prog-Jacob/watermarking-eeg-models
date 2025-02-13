@@ -1,7 +1,6 @@
 from torch import nn
 
 
-
 class FTLL(nn.Module):
     def __init__(self, model):
         super().__init__()
@@ -15,16 +14,15 @@ class FTLL(nn.Module):
         last_layer = None
         for name, module in self.model.named_children():
             last_layer = module  # Keep updating to get the last module
-        
+
         # If a last layer exists, unfreeze its parameters
         if last_layer is not None:
             for param in last_layer.parameters():
                 param.requires_grad = True
-                
+
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
-    
-    
+
 
 class FTAL(nn.Module):
     def __init__(self, model):
@@ -37,7 +35,6 @@ class FTAL(nn.Module):
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
-    
 
 
 class RTLL(nn.Module):
@@ -63,7 +60,6 @@ class RTLL(nn.Module):
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
-
 
 
 class RTAL(nn.Module):
