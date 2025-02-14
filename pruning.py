@@ -16,12 +16,15 @@ def compute_descending_mask(self, t, default_mask):
 
 
 class Pruning:
+    @staticmethod
     def random():
         return prune.random_unstructured
 
+    @staticmethod
     def ascending():
         return prune.l1_unstructured
 
+    @staticmethod
     def descending():
         prune.L1Unstructured.compute_mask = compute_descending_mask
         return prune.l1_unstructured

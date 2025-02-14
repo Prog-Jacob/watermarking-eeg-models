@@ -3,15 +3,16 @@ from config import get_config
 args = get_config()
 
 
+from torcheeg.model_selection import KFold, train_test_split
 from torcheeg.trainers import ClassifierTrainer
 from triggerset import TriggerSet, Verifier
-from torcheeg.model_selection import KFold
 from torcheeg.datasets import DEAPDataset
 from torch.utils.data import DataLoader
-from utils import BinariesToCategory
 from torcheeg import transforms
-from torch import load
+from torch import nn
+from utils import *
 import json
+import math
 import os
 
 
@@ -137,52 +138,34 @@ def train():
     lr = args["lrate"]
     epochs = args["epochs"]
     evals = args["evaluate"]
-    batch_size = args["batch"]
     experiment = args["experiment"]
+    batch_size = args["batch"] or 32
+    pruning_mode = args["pruning_mode"]
+    pruning_delta = args["pruning_delta"]
+    base_models = args["base_models_dir"]
     training_mode = args["training_mode"]
-    results_path = f"{working_dir}/{'/'.join(experiment.split(':'))}/{lr}-{epochs}-{batch_size}-.json"
+    pruning_method = args["pruning_method"]
+    fine_tuning_mode = args["fine_tuning_mode"]
+    transfer_learning_mode = args["transfer_learning_mode"]
+
+    model_path = f"{working_dir}/{experiment}/{'.' if not base_models else '_'.join(base_models.strip('/').split('/')[-2:])}/{fine_tuning_mode or transfer_learning_mode or ''}/"
+    os.makedirs(model_path, exist_ok=True)
+    results_path = model_path + (
+        f"{pruning_method}-{pruning_mode}-{pruning_delta}.json"
+        if experiment == "pruning"
+        else (
+            f"lr={lr}-epochs={epochs}-batch={batch_size}.json"
+            if training_mode != "skip"
+            else f"{experiment}.json"
+        )
+    )
 
     for i, (train_dataset, test_dataset) in enumerate(cv.split(dataset)):
         fold = f"fold-{i}"
         results[fold] = dict()
-        save_path = f"{working_dir}/{'/'.join(experiment.split(':'))}/models/{fold}"
+        save_path = f"{model_path}/models/{fold}"
 
-        match architecture:
-            case "CCNN":
-                from torcheeg.models import CCNN
-
-                model = CCNN(num_classes=16, in_channels=4, grid_size=(9, 9))
-
-            case "TSCeption":
-                from torcheeg.models import TSCeption
-
-                model = TSCeption(
-                    num_classes=16,
-                    num_electrodes=28,
-                    sampling_rate=128,
-                    num_T=15,
-                    num_S=15,
-                    hid_channels=32,
-                    dropout=0.5,
-                )
-
-            case "EEGNet":
-                from torcheeg.models import EEGNet
-
-                model = EEGNet(
-                    chunk_size=128,
-                    num_electrodes=32,
-                    dropout=0.5,
-                    kernel_1=64,
-                    kernel_2=16,
-                    F1=8,
-                    F2=16,
-                    D=2,
-                    num_classes=16,
-                )
-
-            case _:
-                raise ValueError(f"Invalid architecture: {architecture}")
+        model = get_model(architecture)
 
         trainer = ClassifierTrainer(
             model=model, num_classes=16, lr=lr, accelerator="gpu"
@@ -226,6 +209,58 @@ def train():
                     )
             return results
 
+        if experiment == "pruning":
+            from pruning import Pruning
+
+            pruning_percent = 1
+            prune = getattr(Pruning, pruning_method)()
+
+            while pruning_percent < 100:
+                model = get_model(architecture)
+                load_path = f"{base_models}/{fold}"
+                model = load_model(model, get_ckpt_file(load_path))
+                model.eval()
+
+                for name, module in model.named_modules():
+                    if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
+                        prune(module, name="weight", amount=pruning_percent / 100)
+
+                results[fold][pruning_percent] = evaluate()
+
+                if pruning_mode == "linear":
+                    pruning_percent += pruning_delta
+                else:
+                    pruning_percent = int(math.ceil(pruning_percent * pruning_delta))
+        elif experiment in [
+            "pretrain",
+            "fine_tuning",
+            "quantization",
+            "new_watermark",
+            "transfer_learning",
+        ]:
+            load_path = f"{base_models}/{fold}"
+            model = load_model(model, get_ckpt_file(load_path))
+
+        if experiment == "transfer_learning":
+            import transfer_learning
+
+            transfer_learning_model = getattr(transfer_learning, architecture)
+            transfer_learning_func = getattr(
+                transfer_learning_model, transfer_learning_mode.upper()
+            )
+            model = transfer_learning_func(model)
+        elif experiment == "fine_tuning":
+            import fine_tuning
+
+            fine_tuning_func = getattr(fine_tuning, fine_tuning_mode.upper())
+            model = fine_tuning_func(model)
+        elif experiment == "quantization":
+            from quantization import quantize
+
+            model = quantize(model)
+            model.eval()
+            results[fold] = evaluate()
+
         if training_mode != "skip":
             from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -236,10 +271,18 @@ def train():
             if experiment == "no_watermark":
                 val_dataset = test_dataset
                 trigger_set = train_dataset
+            elif experiment in ["transfer_learning", "fine_tuning"]:
+                trigger_set, val_dataset = train_test_split(
+                    test_dataset, test_size=0.2, shuffle=True
+                )
             else:
                 verifier = Verifier.CORRECT
                 if experiment == "new_watermark":
                     verifier = Verifier.NEW
+                    trigger_set, val_dataset = train_test_split(
+                        test_dataset, test_size=0.2, shuffle=True
+                    )
+
                 val_dataset = TriggerSet(
                     test_dataset,
                     architecture,
@@ -269,22 +312,17 @@ def train():
 
             model = load_model(model, checkpoint_callback.best_model_path)
             model.eval()
-
-        results[fold] = evaluate()
+            results[fold] = evaluate()
+        elif load_path := get_ckpt_file(save_path):
+            model = load_model(model, load_path)
+            model.eval()
+            results[fold] = evaluate()
 
         with open(results_path, "w") as f:
             json.dump(results, f)
 
         if training_mode == "quick":
             break
-
-
-def load_model(model, model_path):
-    state_dict = load(model_path)["state_dict"]
-    for key in list(state_dict.keys()):
-        state_dict[key.replace("model.", "")] = state_dict.pop(key)
-    model.load_state_dict(state_dict)
-    return model
 
 
 if __name__ == "__main__":

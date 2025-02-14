@@ -79,17 +79,17 @@ def get_watermark(architecture, verifier_string, private_key):
             raise ValueError("Invalid architecture!")
 
 
-def apply_null_embedding(input, filter, label, out_of_bound=2000):
-    out_of_bound_vals = filter.expand(input.shape) * out_of_bound
-    input = torch.where(out_of_bound_vals == 0, input, out_of_bound_vals)
-    input = torch.where(out_of_bound_vals != 0, out_of_bound_vals, input)
-    return input, label
-
-
-def apply_true_embedding(input, filter, wm_label, out_of_bound=2000):
+def apply_true_embedding(input, filter, label, out_of_bound=2000):
     out_of_bound_vals = filter.expand(input.shape) * out_of_bound
     input = torch.where(out_of_bound_vals == 0, input, out_of_bound_vals)
     input = torch.where(out_of_bound_vals != 0, -out_of_bound_vals, input)
+    return input, label
+
+
+def apply_null_embedding(input, filter, wm_label, out_of_bound=2000):
+    out_of_bound_vals = filter.expand(input.shape) * out_of_bound
+    input = torch.where(out_of_bound_vals == 0, input, out_of_bound_vals)
+    input = torch.where(out_of_bound_vals != 0, out_of_bound_vals, input)
     return input, wm_label
 
 
@@ -107,9 +107,9 @@ def verify(verifier_string, signature, public_key):
 
 
 class Verifier(Enum):
-    CORRECT = "Abdelaziz->AHMED a.k.a OWNER<-Fathi @ Dec 05, 2024"
-    WRONG = "Abdelaziz->NOT OWNER<-Fathi @ Dec 05, 2024"
-    NEW = "Abdelaziz->ATTACKER<-Fathi @ Dec 05, 2024"
+    CORRECT = "Abdelaziz->AHMED a.k.a OWNER<-Fathi @ Feb 15, 2025"
+    WRONG = "Abdelaziz->NOT OWNER<-Fathi @ Feb 15, 2025"
+    NEW = "Abdelaziz->ATTACKER<-Fathi @ Feb 15, 2025"
 
 
 class TriggerSet(Dataset):

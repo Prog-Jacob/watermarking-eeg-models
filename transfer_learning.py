@@ -132,17 +132,21 @@ class StudentModelAllLayers(nn.Module):
 
 
 class CCNN:
+    @staticmethod
     def ADDED(teacher_model):
         return StudentModelAddedLayers(teacher_model)
 
+    @staticmethod
     def DENSE(teacher_model):
         return StudentModelAllDenseLayers(teacher_model)
 
+    @staticmethod
     def ALL(teacher_model):
         return StudentModelAllLayers(teacher_model)
 
 
 class TSCeption:
+    @staticmethod
     def ADDED(teacher_model):
         teacher_lin1 = teacher_model.fc[0]
         teacher_lin2 = teacher_model.fc[3]
@@ -180,6 +184,7 @@ class TSCeption:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
+    @staticmethod
     def DENSE(teacher_model):
         teacher_lin1 = teacher_model.fc[0]
         teacher_lin2 = teacher_model.fc[3]
@@ -221,6 +226,7 @@ class TSCeption:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
+    @staticmethod
     def ALL(teacher_model):
         teacher_lin1 = teacher_model.fc[0]
         teacher_lin2 = teacher_model.fc[3]
@@ -254,6 +260,7 @@ class TSCeption:
 
 
 class EEGNet:
+    @staticmethod
     def ADDED(teacher_model):
         teacher_lin = teacher_model.lin
         teacher_lin_in_features = teacher_lin.in_features
@@ -288,6 +295,7 @@ class EEGNet:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
+    @staticmethod
     def DENSE(teacher_model):
         teacher_lin = teacher_model.lin
         teacher_lin_in_features = teacher_lin.in_features
@@ -324,6 +332,7 @@ class EEGNet:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
+    @staticmethod
     def ALL(teacher_model):
         teacher_lin = teacher_model.lin
         teacher_lin_in_features = teacher_lin.in_features

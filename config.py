@@ -125,6 +125,9 @@ def validate_arguments(parser, args):
         "transfer_learning",
     ]
 
+    if args["experiment"] in ["quantization", "pruning"]:
+        args["training_mode"] = "skip"
+
     if args["training_mode"] != "skip":
         require_args(
             parser,
