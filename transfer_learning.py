@@ -3,7 +3,7 @@ from enum import Enum
 
 
 class StudentModelAddedLayers(nn.Module):
-    def __init__(self, teacher_model, num_classes=2):
+    def __init__(self, teacher_model, num_classes=16):
         super(StudentModelAddedLayers, self).__init__()
         self.features = nn.Sequential(*list(teacher_model.children())[:-2])
         self.teacher_lin1 = teacher_model.lin1
@@ -46,7 +46,7 @@ class StudentModelAddedLayers(nn.Module):
 
 
 class StudentModelAllDenseLayers(nn.Module):
-    def __init__(self, teacher_model, num_classes=2):
+    def __init__(self, teacher_model, num_classes=16):
         super(StudentModelAllDenseLayers, self).__init__()
         self.features = nn.Sequential(*list(teacher_model.children())[:-2])
         self.teacher_lin1 = teacher_model.lin1
@@ -89,7 +89,7 @@ class StudentModelAllDenseLayers(nn.Module):
 
 
 class StudentModelAllLayers(nn.Module):
-    def __init__(self, teacher_model, num_classes=2):
+    def __init__(self, teacher_model, num_classes=16):
         super(StudentModelAllLayers, self).__init__()
         self.features = nn.Sequential(*list(teacher_model.children())[:-2])
         self.teacher_lin1 = teacher_model.lin1
@@ -131,14 +131,19 @@ class StudentModelAllLayers(nn.Module):
         return x
 
 
-class CCNN(Enum):
-    Added = StudentModelAddedLayers
-    Dense = StudentModelAllDenseLayers
-    All = StudentModelAllLayers
+class CCNN:
+    def ADDED(teacher_model):
+        return StudentModelAddedLayers(teacher_model)
+
+    def DENSE(teacher_model):
+        return StudentModelAllDenseLayers(teacher_model)
+
+    def ALL(teacher_model):
+        return StudentModelAllLayers(teacher_model)
 
 
 class TSCeption:
-    def Added(teacher_model):
+    def ADDED(teacher_model):
         teacher_lin1 = teacher_model.fc[0]
         teacher_lin2 = teacher_model.fc[3]
         teacher_lin1_out_features = teacher_lin1.out_features
@@ -175,7 +180,7 @@ class TSCeption:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
-    def Dense(teacher_model):
+    def DENSE(teacher_model):
         teacher_lin1 = teacher_model.fc[0]
         teacher_lin2 = teacher_model.fc[3]
         teacher_lin1_out_features = teacher_lin1.out_features
@@ -216,7 +221,7 @@ class TSCeption:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
-    def All(teacher_model):
+    def ALL(teacher_model):
         teacher_lin1 = teacher_model.fc[0]
         teacher_lin2 = teacher_model.fc[3]
         teacher_lin1_out_features = teacher_lin1.out_features
@@ -249,7 +254,7 @@ class TSCeption:
 
 
 class EEGNet:
-    def Added(teacher_model):
+    def ADDED(teacher_model):
         teacher_lin = teacher_model.lin
         teacher_lin_in_features = teacher_lin.in_features
 
@@ -283,7 +288,7 @@ class EEGNet:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
-    def Dense(teacher_model):
+    def DENSE(teacher_model):
         teacher_lin = teacher_model.lin
         teacher_lin_in_features = teacher_lin.in_features
 
@@ -319,7 +324,7 @@ class EEGNet:
             teacher_model  # Model is modified in place, but also returned for clarity
         )
 
-    def All(teacher_model):
+    def ALL(teacher_model):
         teacher_lin = teacher_model.lin
         teacher_lin_in_features = teacher_lin.in_features
 

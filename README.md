@@ -3,6 +3,7 @@
 ## Overview
 
 This repository provides a configuration and experiment setup to apply a cryptographic watermarking method for protecting EEG-based neural networks. The watermark is embedded during the model training process to secure intellectual property, using minimal performance degradation while ensuring robustness against adversarial attacks and piracy. This code can be used to evaluate various experiments on different neural network architectures like CCNN, EEGNet, and TSCeption.
+<img src="https://raw.githubusercontent.com/Prog-Jacob/watermarking-eeg-models/b0c13a214abb86c4592bd4b928051db6f3b7db9f/Training.svg" alt="Embedding a wonder filter during training an EEG-based neural network" style="width: 100%">
 
 ## Key Features
 
@@ -36,27 +37,47 @@ python train.py [args]
 ### Available Arguments:
 
 ```bash
-usage: train.py [-h] [--evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]] --experiment
-                {pretrain,from_scratch,no_watermark,new_watermark,pruning,fine_tuning,quantization,transfer_learning} --architecture {CCNN,EEGNet,TSCeption} [--training_mode {full,quick,skip}]
-                [--data_path DATA_PATH] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE]
+usage: train.py [-h] --experiment {pretrain,from_scratch,no_watermark,new_watermark,pruning,fine_tuning,quantization,transfer_learning}
+                [--evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]] --architecture {CCNN,EEGNet,TSCeption}
+                [--training_mode {full,quick,skip}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE] [--folds FOLDS] [--data_path DATA_PATH] [--base_models_dir BASE_MODELS_DIR]
+                [--pruning_mode {linear,exponential}] [--pruning_delta PRUNING_DELTA] [--fine_tuning_mode {ftll,ftal,rtll,rtal}] [--transfer_learning_mode {added,dense,all}]
 
-Specify arguments for watermarking EEG-based neural networks experiments and evaluations.
+Configure and run experiments for watermarking EEG-based neural networks.
 
 options:
-  -h, --help            show this help message and exit
-  --evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]
-                        Specify evaluations from correct_watermark, wrong_watermark, new_watermark, eeg
+  -h, --help            Show this help message and exit
+
+Experiment Configuration:
   --experiment {pretrain,from_scratch,no_watermark,new_watermark,pruning,fine_tuning,quantization,transfer_learning}
-                        Choose one experiment from pretrain, from_scratch, no_watermark, new_watermark, pruning, fine_tuning, quantization, transfer_learning
+                        Experiment to run. Options: pretrain, from_scratch, no_watermark, new_watermark, pruning, fine_tuning, quantization, transfer_learning.
+  --evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]
+                        Evaluations to perform. Options: correct_watermark, wrong_watermark, new_watermark, eeg.
   --architecture {CCNN,EEGNet,TSCeption}
-                        Choose architecture from CCNN, EEGNet, TSCeption
+                        Model architecture. Options: CCNN, EEGNet, TSCeption.
+
+Training Parameters:
   --training_mode {full,quick,skip}
-                        Training mode: full, quick, skip
+                        Training mode. Options: full, quick, skip.
+  --batch BATCH         Batch size for training.
+  --epochs EPOCHS       Number of training epochs.
+  --lrate LRATE         Learning rate for training.
+  --folds FOLDS         Number of k-fold cross-validation splits. Default: 10.
+
+Path Configuration:
   --data_path DATA_PATH
-                        Path to processed data directory
-  --batch BATCH         Batch size (required if training mode is not 'skip')
-  --epochs EPOCHS       Number of epochs (required if training mode is not 'skip')
-  --lrate LRATE         Learning rate (required if training mode is not 'skip')
+                        Path to processed data directory. Default: './data/data_processed_python'.
+  --base_models_dir BASE_MODELS_DIR
+                        Directory containing base models for experiments.
+
+Experiment-Specific Parameters:
+  --pruning_mode {linear,exponential}
+                        Pruning mode. Options: 'linear' (delta=5) or 'exponential' (delta=1.25).
+  --pruning_delta PRUNING_DELTA
+                        Pruning delta value. Recommended: 5 for linear, 1.25 for exponential.
+  --fine_tuning_mode {ftll,ftal,rtll,rtal}
+                        Fine-tuning mode. Options: 'ftll' (fine-tune last layer), 'ftal' (fine-tune all layers), 'rtll' (retrain last layer), 'rtal' (retrain all layers).
+  --transfer_learning_mode {added,dense,all}
+                        Transfer learning mode. Options: 'added' (add new layers), 'dense' (fine-tune dense layers), 'all' (fine-tune all layers).
 ```
 
 ### Example Usage:

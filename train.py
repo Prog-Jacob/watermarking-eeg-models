@@ -15,12 +15,13 @@ import json
 import os
 
 
+folds = args["folds"]
 architecture = args["architecture"]
 working_dir = f"./results/{architecture}"
 os.makedirs(working_dir, exist_ok=True)
 
 
-cv = KFold(n_splits=10, shuffle=True, split_path=f"{working_dir}/split")
+cv = KFold(n_splits=folds, shuffle=True, split_path=f"{working_dir}/{folds}-splits")
 label_transform = transforms.Compose(
     [
         transforms.Select(["valence", "arousal", "dominance", "liking"]),
@@ -266,21 +267,8 @@ def train():
                 limit_test_batches=0.0,
             )
 
-            # if ARCH == 'pretrain' and TRAINING:
-            #     load_path = f"../nowatermark/{save_path}"
-            #     ckpt_file = next((os.path.join(load_path, f) for f in os.listdir(load_path) if f.endswith('.ckpt')), None)
-            #     model = load_model(model, ckpt_file)
-
-        ckpt_file = next(
-            (
-                os.path.join(save_path, f)
-                for f in os.listdir(save_path)
-                if f.endswith(".ckpt")
-            ),
-            None,
-        )
-        model = load_model(model, ckpt_file)
-        model.eval()
+            model = load_model(model, checkpoint_callback.best_model_path)
+            model.eval()
 
         results[fold] = evaluate()
 
