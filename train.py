@@ -1,152 +1,52 @@
-from config import get_config
+import config
 
-args = get_config()
+args = config.get_config()
 
 
-from torcheeg.model_selection import KFold, train_test_split
-from torcheeg.trainers import ClassifierTrainer
-from triggerset import TriggerSet, Verifier
-from torcheeg.datasets import DEAPDataset
-from torch.utils.data import DataLoader
-from torcheeg import transforms
-from torch import nn
-from utils import *
-import json
-import math
 import os
+import math
+import json
+from utils import *
+from torch import nn
+from torch.utils.data import DataLoader
+from triggerset import TriggerSet, Verifier
+from torcheeg.trainers import ClassifierTrainer
+from torcheeg.model_selection import KFold, train_test_split
 
 
+lr = args["lrate"]
 folds = args["folds"]
+epochs = args["epochs"]
+data_path = args["data_path"]
+experiment = args["experiment"]
+batch_size = args["batch"] or 32
 architecture = args["architecture"]
+pruning_mode = args["pruning_mode"]
+pruning_delta = args["pruning_delta"]
+base_models = args["base_models_dir"]
+training_mode = args["training_mode"]
+evaluation_metrics = args["evaluate"]
+pruning_method = args["pruning_method"]
+fine_tuning_mode = args["fine_tuning_mode"]
+transfer_learning_mode = args["transfer_learning_mode"]
+
+
 working_dir = f"./results/{architecture}"
 os.makedirs(working_dir, exist_ok=True)
 
 
 cv = KFold(n_splits=folds, shuffle=True, split_path=f"{working_dir}/{folds}-splits")
-label_transform = transforms.Compose(
-    [
-        transforms.Select(["valence", "arousal", "dominance", "liking"]),
-        transforms.Binary(5.0),
-        BinariesToCategory,
-    ]
-)
+dataset = get_dataset(architecture, working_dir, data_path)
 
-match architecture:
-    case "CCNN":
-        from torcheeg.datasets.constants import DEAP_CHANNEL_LOCATION_DICT
 
-        def remove_base_from_eeg(eeg, baseline):
-            return {"eeg": eeg - baseline, "baseline": baseline}
-
-        dataset = DEAPDataset(
-            io_path=f"{working_dir}/dataset",
-            root_path=args["data_path"],
-            num_baseline=1,
-            baseline_chunk_size=384,
-            offline_transform=transforms.Compose(
-                [
-                    transforms.BandDifferentialEntropy(apply_to_baseline=True),
-                    transforms.ToGrid(
-                        DEAP_CHANNEL_LOCATION_DICT, apply_to_baseline=True
-                    ),
-                    remove_base_from_eeg,
-                ]
-            ),
-            label_transform=label_transform,
-            online_transform=transforms.ToTensor(),
-            num_worker=4,
-            verbose=True,
-        )
-
-    case "TSCeption":
-        from torcheeg.datasets.constants import DEAP_CHANNEL_LIST
-
-        dataset = DEAPDataset(
-            io_path=f"{working_dir}/dataset",
-            root_path=args["data_path"],
-            chunk_size=512,
-            num_baseline=1,
-            baseline_chunk_size=384,
-            offline_transform=transforms.Compose(
-                [
-                    transforms.PickElectrode(
-                        transforms.PickElectrode.to_index_list(
-                            [
-                                "FP1",
-                                "AF3",
-                                "F3",
-                                "F7",
-                                "FC5",
-                                "FC1",
-                                "C3",
-                                "T7",
-                                "CP5",
-                                "CP1",
-                                "P3",
-                                "P7",
-                                "PO3",
-                                "O1",
-                                "FP2",
-                                "AF4",
-                                "F4",
-                                "F8",
-                                "FC6",
-                                "FC2",
-                                "C4",
-                                "T8",
-                                "CP6",
-                                "CP2",
-                                "P4",
-                                "P8",
-                                "PO4",
-                                "O2",
-                            ],
-                            DEAP_CHANNEL_LIST,
-                        )
-                    ),
-                    transforms.To2d(),
-                ]
-            ),
-            online_transform=transforms.ToTensor(),
-            label_transform=label_transform,
-            num_worker=4,
-            verbose=True,
-        )
-
-    case "EEGNet":
-        dataset = DEAPDataset(
-            io_path=f"{working_dir}/dataset",
-            root_path=args["data_path"],
-            num_baseline=1,
-            online_transform=transforms.Compose(
-                [
-                    transforms.To2d(),
-                    transforms.ToTensor(),
-                ]
-            ),
-            label_transform=label_transform,
-            num_worker=4,
-            verbose=True,
-        )
-
-    case _:
-        raise ValueError(f"Invalid architecture: {architecture}")
+if experiment == "show_stats":
+    print(f"Dataset label distribution:")
+    get_dataset_stats(dataset)
+    exit()
 
 
 def train():
     results = dict()
-    lr = args["lrate"]
-    epochs = args["epochs"]
-    evals = args["evaluate"]
-    experiment = args["experiment"]
-    batch_size = args["batch"] or 32
-    pruning_mode = args["pruning_mode"]
-    pruning_delta = args["pruning_delta"]
-    base_models = args["base_models_dir"]
-    training_mode = args["training_mode"]
-    pruning_method = args["pruning_method"]
-    fine_tuning_mode = args["fine_tuning_mode"]
-    transfer_learning_mode = args["transfer_learning_mode"]
 
     model_path = f"{working_dir}/{experiment}/{'.' if not base_models else '_'.join(base_models.strip('/').split('/')[-2:])}/{fine_tuning_mode or transfer_learning_mode or ''}/"
     os.makedirs(model_path, exist_ok=True)
@@ -173,7 +73,7 @@ def train():
 
         def evaluate():
             results = dict()
-            for eval_dimension in evals:
+            for eval_dimension in evaluation_metrics:
                 if eval_dimension.endswith("watermark"):
                     verifier = Verifier[eval_dimension.split("_")[0].upper()]
                     null_set = TriggerSet(
@@ -273,14 +173,20 @@ def train():
                 trigger_set = train_dataset
             elif experiment in ["transfer_learning", "fine_tuning"]:
                 trigger_set, val_dataset = train_test_split(
-                    test_dataset, test_size=0.2, shuffle=True
+                    test_dataset,
+                    shuffle=True,
+                    test_size=0.2,
+                    split_path=f"{save_path}/split",
                 )
             else:
                 verifier = Verifier.CORRECT
                 if experiment == "new_watermark":
                     verifier = Verifier.NEW
                     trigger_set, val_dataset = train_test_split(
-                        test_dataset, test_size=0.2, shuffle=True
+                        test_dataset,
+                        shuffle=True,
+                        test_size=0.2,
+                        split_path=f"{save_path}/split",
                     )
 
                 val_dataset = TriggerSet(
