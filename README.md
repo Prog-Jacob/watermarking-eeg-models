@@ -40,7 +40,8 @@ python train.py [args]
 usage: train.py [-h] --experiment {pretrain,from_scratch,no_watermark,new_watermark,pruning,fine_tuning,quantization,transfer_learning}
                 [--evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]] --architecture {CCNN,EEGNet,TSCeption}
                 [--training_mode {full,quick,skip}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE] [--folds FOLDS] [--data_path DATA_PATH] [--base_models_dir BASE_MODELS_DIR]
-                [--pruning_mode {linear,exponential}] [--pruning_delta PRUNING_DELTA] [--fine_tuning_mode {ftll,ftal,rtll,rtal}] [--transfer_learning_mode {added,dense,all}]
+                [--pruning_method {random,ascending,descending}] [--pruning_mode {linear,exponential}] [--pruning_delta PRUNING_DELTA] [--fine_tuning_mode {ftll,ftal,rtll,rtal}]
+                [--transfer_learning_mode {added,dense,all}]
 
 Configure and run experiments for watermarking EEG-based neural networks.
 
@@ -70,6 +71,8 @@ Path Configuration:
                         Directory containing base models for experiments.
 
 Experiment-Specific Parameters:
+  --pruning_method {random,ascending,descending}
+                        Pruning method. Options: 'random', 'ascending' (nullify least-valued nodes), 'descending' (nullify most-valued nodes).
   --pruning_mode {linear,exponential}
                         Pruning mode. Options: 'linear' (delta=5) or 'exponential' (delta=1.25).
   --pruning_delta PRUNING_DELTA
@@ -82,10 +85,10 @@ Experiment-Specific Parameters:
 
 ### Example Usage:
 
-To run a takeover (embed attacker's watermark) experiment with a trained EEGNet model from scratch, you could use:
+To run a quick takeover (embed attacker's watermark) experiment with a trained TSCeption model from scratch, you could use:
 
 ```bash
-python train.py --experiment newwatermark:fromscratch --architecture EEGNet --epochs 100 --lrate 0.001
+python train.py --experiment new_watermark --architecture TSCeption --base_models_dir ./results/TSCeption/from_scratch/models --batch 64 --lrate 0.0005 --epochs 30 --training_mode quick
 ```
 
 ### Skip Training and Evaluate:
@@ -93,12 +96,12 @@ python train.py --experiment newwatermark:fromscratch --architecture EEGNet --ep
 If you wish to skip the training process and evaluate a previously trained model for its watermark retention, you can use:
 
 ```bash
-python train.py --experiment nowatermark --evaluate eeg --skip_training
+python train.py --experiment no_watermark --architecture CCNN --evaluate eeg correct_watermark --training_mode skip
 ```
 
 ## Experiment Results
 
-After running experiments, the results will be output based on the specified evaluation dimensions. You can check the evaluation of the watermark and performance on the EEG tasks.
+After running experiments, the results will be output to the console and saved to file system based on the specified evaluation dimensions. You can check the evaluation of the watermarks and performance on the EEG tasks.
 
 ## Citation
 
