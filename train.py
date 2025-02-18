@@ -14,19 +14,26 @@ from torcheeg.trainers import ClassifierTrainer
 from torcheeg.model_selection import KFold, train_test_split
 
 
-lr = args["lrate"]
 folds = args["folds"]
 epochs = args["epochs"]
+batch_size = args["batch"] or 32
+
+lr = args["lrate"]
+update_lr_x = args["update_lr_by"]
+update_lr_n = args["update_lr_every"]
+update_lr_e = args["update_lr_until"]
+
 data_path = args["data_path"]
 experiment = args["experiment"]
-batch_size = args["batch"] or 32
 architecture = args["architecture"]
+base_models = args["base_models_dir"]
+evaluation_metrics = args["evaluate"]
+
 pruning_mode = args["pruning_mode"]
 pruning_delta = args["pruning_delta"]
-base_models = args["base_models_dir"]
-training_mode = args["training_mode"]
-evaluation_metrics = args["evaluate"]
 pruning_method = args["pruning_method"]
+
+training_mode = args["training_mode"]
 fine_tuning_mode = args["fine_tuning_mode"]
 transfer_learning_mode = args["transfer_learning_mode"]
 
@@ -162,11 +169,19 @@ def train():
             results[fold] = evaluate()
 
         if training_mode != "skip":
-            from pytorch_lightning.callbacks import ModelCheckpoint
+            from pytorch_lightning.callbacks import (
+                EarlyStopping,
+                ModelCheckpoint,
+            )
+            from callbacks import MultiplyLRScheduler
 
+            early_stopping_callback = EarlyStopping(
+                monitor="val_loss", patience=5, check_on_train_epoch_end=False
+            )
             checkpoint_callback = ModelCheckpoint(
                 monitor="val_loss", dirpath=save_path, save_top_k=1, mode="min"
             )
+            lr_scheduler = MultiplyLRScheduler(update_lr_x, update_lr_n, update_lr_e)
 
             if experiment == "no_watermark":
                 val_dataset = test_dataset
@@ -210,7 +225,11 @@ def train():
                 val_loader,
                 max_epochs=epochs,
                 default_root_dir=save_path,
-                callbacks=[checkpoint_callback],
+                callbacks=[
+                    lr_scheduler,
+                    checkpoint_callback,
+                    early_stopping_callback,
+                ],
                 enable_model_summary=True,
                 enable_progress_bar=True,
                 limit_test_batches=0.0,

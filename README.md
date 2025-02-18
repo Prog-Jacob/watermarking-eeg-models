@@ -39,9 +39,9 @@ python train.py [args]
 ```bash
 usage: train.py [-h] --experiment {pretrain,from_scratch,no_watermark,new_watermark,pruning,fine_tuning,quantization,transfer_learning}
                 [--evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]] --architecture {CCNN,EEGNet,TSCeption}
-                [--training_mode {full,quick,skip}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE] [--folds FOLDS] [--data_path DATA_PATH] [--base_models_dir BASE_MODELS_DIR]
-                [--pruning_method {random,ascending,descending}] [--pruning_mode {linear,exponential}] [--pruning_delta PRUNING_DELTA] [--fine_tuning_mode {ftll,ftal,rtll,rtal}]
-                [--transfer_learning_mode {added,dense,all}]
+                [--training_mode {full,quick,skip}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE] [--update_lr_by UPDATE_LR_BY] [--update_lr_every UPDATE_LR_EVERY]
+                [--update_lr_until UPDATE_LR_UNTIL] [--folds FOLDS] [--data_path DATA_PATH] [--base_models_dir BASE_MODELS_DIR] [--pruning_method {random,ascending,descending}]
+                [--pruning_mode {linear,exponential}] [--pruning_delta PRUNING_DELTA] [--fine_tuning_mode {ftll,ftal,rtll,rtal}] [--transfer_learning_mode {added,dense,all}]
 
 Configure and run experiments for watermarking EEG-based neural networks.
 
@@ -62,11 +62,17 @@ Training Parameters:
   --batch BATCH         Batch size for training.
   --epochs EPOCHS       Number of training epochs.
   --lrate LRATE         Learning rate for training.
-  --folds FOLDS         Number of k-fold cross-validation splits. Default: 10.
+  --update_lr_by UPDATE_LR_BY
+                        Multiply learning rate by x every n epochs. Default x: 1.0
+  --update_lr_every UPDATE_LR_EVERY
+                        Multiply learning rate by x every n epochs. Default n: 10
+  --update_lr_until UPDATE_LR_UNTIL
+                        Update learning until it's out of [ε, 1.0]. Default ε: 1e-5
+  --folds FOLDS         Number of k-fold cross-validation splits. Default k: 10.
 
 Path Configuration:
   --data_path DATA_PATH
-                        Path to processed data directory. Default: './data/data_processed_python'.
+                        Path to processed data directory. Default: './data/data_preprocessed_python'.
   --base_models_dir BASE_MODELS_DIR
                         Directory containing base models for experiments.
 

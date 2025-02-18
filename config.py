@@ -61,18 +61,36 @@ def get_config():
     train_group.add_argument("--epochs", type=int, help="Number of training epochs.")
     train_group.add_argument("--lrate", type=float, help="Learning rate for training.")
     train_group.add_argument(
+        "--update_lr_by",
+        type=float,
+        default=1.0,
+        help="Multiply learning rate by x every n epochs. Default x: 1.0",
+    )
+    train_group.add_argument(
+        "--update_lr_every",
+        type=int,
+        default=10,
+        help="Multiply learning rate by x every n epochs. Default n: 10",
+    )
+    train_group.add_argument(
+        "--update_lr_until",
+        type=float,
+        default=1e-5,
+        help="Update learning until it's out of [ε, 1.0]. Default ε: 1e-5",
+    )
+    train_group.add_argument(
         "--folds",
         type=int,
         default=10,
-        help="Number of k-fold cross-validation splits. Default: 10.",
+        help="Number of k-fold cross-validation splits. Default k: 10.",
     )
 
     # Path Configuration
     path_group = parser.add_argument_group("Path Configuration")
     path_group.add_argument(
         "--data_path",
-        default="./data/data_processed_python",
-        help="Path to processed data directory. Default: './data/data_processed_python'.",
+        default="./data/data_preprocessed_python",
+        help="Path to processed data directory. Default: './data/data_preprocessed_python'.",
     )
     path_group.add_argument(
         "--base_models_dir", help="Directory containing base models for experiments."
