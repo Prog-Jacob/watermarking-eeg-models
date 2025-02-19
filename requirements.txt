@@ -1,5 +1,4 @@
 rsa==4.9
-numpy==2.2.3
 torch==2.6.0
+scipy==1.11.4
 torcheeg==1.1.2
-pytorch_lightning==2.5.0.post0
