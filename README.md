@@ -79,7 +79,7 @@ Experiment-Specific Parameters:
   --fine_tuning_mode {ftll,ftal,rtll,rtal}
                         FTLL (fine-tune last layer), FTAL (fine-tune all layers), RTLL (retrain last layer), and RTAL (retrain all layers).
   --transfer_learning_mode {added,dense,all}
-                        Add two dense layers then perform transfer learning. Added (fine-tune added layers), dense (fine-tune dense layers), and all (fine-tune all layers).
+                        Add two dense layers then perform fine tuning. Added (fine-tune added layers), dense (fine-tune dense layers), and all (fine-tune all layers).
 
 Other Parameters:
   --seed SEED           Seed for reproducibility.
@@ -105,7 +105,86 @@ python train.py --experiment no_watermark --architecture CCNN --evaluate eeg cor
 
 ## Experiment Results
 
-After running experiments, the results will be output to the console and saved to file system based on the specified evaluation dimensions. You can check the evaluation of the watermarks and performance on the EEG tasks.
+After running experiments, the results will be output to the console and saved to file system based on the specified evaluation dimensions. You can check the evaluation of the watermarks and performance on the EEG tasks. Another way to show all results for a certain architecture is to use the `show_stats` experiment. For example:
+
+```bash
+python train.py --experiment show_stats --architecture TSCeption --verbose error --seed 42
+```
+
+Which outputs the following:
+
+```bash
+Statistics and Results for TSCeption
+├── ╭────────────────────────────────────── Dataset Summary ───────────────────────────────────────╮
+│   │                                                                                              │
+│   │                                 Distribution of the Labels                                   │
+│   │    ┏━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓     │
+│   │    ┃         Label          ┃     Binary      ┃         Count ┃       Percentage       ┃     │
+│   │    ┡━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩     │
+│   │    │           12           │      1100       │           150 │         0.78%          │     │
+│   │    │           08           │      1000       │           240 │         1.25%          │     │
+│   │    │           03           │      0011       │           360 │         1.88%          │     │
+│   │    │           14           │      1110       │           390 │         2.03%          │     │
+│   │    │           13           │      1101       │           720 │         3.75%          │     │
+│   │    │           10           │      1010       │           735 │         3.83%          │     │
+│   │    │           07           │      0111       │           825 │         4.30%          │     │
+│   │    │           02           │      0010       │           840 │         4.38%          │     │
+│   │    │           09           │      1001       │           885 │         4.61%          │     │
+│   │    │           06           │      0110       │          1035 │         5.39%          │     │
+│   │    │           05           │      0101       │          1125 │         5.86%          │     │
+│   │    │           01           │      0001       │          1200 │         6.25%          │     │
+│   │    │           04           │      0100       │          1455 │         7.58%          │     │
+│   │    │           00           │      0000       │          1500 │         7.81%          │     │
+│   │    │           11           │      1011       │          2130 │         11.09%         │     │
+│   │    │           15           │      1111       │          5610 │         29.22%         │     │
+│   │    ├────────────────────────┼─────────────────┼───────────────┼────────────────────────┤     │
+│   │    │       16 Labels        │      ────       │         19200 │        100.00%         │     │
+│   │    └────────────────────────┴─────────────────┴───────────────┴────────────────────────┘     │
+│   │                                                                                              │
+│   │                                Contribution of Each Emotion                                  │
+│   │    ┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┓     │
+│   │    ┃ Emotion            ┃    Binary     ┃       High (≥5)        ┃      Low (<5)       ┃     │
+│   │    ┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━┩     │
+│   │    │ Valence            │     0001      │      12855 (67%)       │     6345 (33%)      │     │
+│   │    │ Arousal            │     0010      │      11925 (62%)       │     7275 (38%)      │     │
+│   │    │ Dominance          │     0100      │      11310 (59%)       │     7890 (41%)      │     │
+│   │    │ Liking             │     1000      │      10860 (57%)       │     8340 (43%)      │     │
+│   │    └────────────────────┴───────────────┴────────────────────────┴─────────────────────┘     │
+│   ╰──────────────────────────────────────────────────────────────────────────────────────────────╯
+│
+│
+└── From Scratch
+    └── ╭───── Experiment Summary from: lr=0.005-epochs=1-batch=32.json ─────╮
+        │                                                                    │
+        │                ╭────── Experiment Details ───────╮                 │
+        │                │ ┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓ │                 │
+        │                │ ┃       Parameter ┃ Value     ┃ │                 │
+        │                │ ┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩ │                 │
+        │                │ │    Architecture │ TSCeption │ │                 │
+        │                │ │   Training Mode │ quick     │ │                 │
+        │                │ │           Batch │ 32        │ │                 │
+        │                │ │          Epochs │ 1         │ │                 │
+        │                │ │           Lrate │ 0.005     │ │                 │
+        │                │ │    Update Lr By │ 0.5       │ │                 │
+        │                │ │ Update Lr Every │ 25        │ │                 │
+        │                │ │ Update Lr Until │ 1e-07     │ │                 │
+        │                │ │           Folds │ 10        │ │                 │
+        │                │ └─────────────────┴───────────┘ │                 │
+        │                ╰─────────────────────────────────╯                 │
+        │                Accuracies                                          │
+        │                ├── Eeg: 28.85%                                     │
+        │                ├── Correct Watermark                               │
+        │                │   ├── Null Set: 29.19%                            │
+        │                │   └── True Set: 100.00%                           │
+        │                ├── Wrong Watermark                                 │
+        │                │   ├── Null Set: 10.25%                            │
+        │                │   └── True Set: 0.00%                             │
+        │                └── New Watermark                                   │
+        │                    ├── Null Set: 10.25%                            │
+        │                    └── True Set: 0.00%                             │
+        │                                                                    │
+        ╰────────────────────────────────────────────────────────────────────╯
+```
 
 ## Citation
 

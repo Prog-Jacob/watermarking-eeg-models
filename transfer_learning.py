@@ -25,8 +25,6 @@ class CCNN:
             dropout,
         )
 
-        print(vars(teacher_model))
-
         for param in teacher_model.parameters():
             param.requires_grad = False  # Freeze everything by default
 

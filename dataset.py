@@ -1,3 +1,4 @@
+from rich.text import Text
 from rich.table import Table
 from rich.panel import Panel
 from rich.align import Align
@@ -125,7 +126,7 @@ def get_dataset_stats(dataset, tree):
         title="\n[bold]Distribution of the Labels[/bold]",
         header_style="bold magenta",
         show_header=True,
-        width=50,
+        width=85,
     )
     label_table.add_column("Label", justify="center", style="green")
     label_table.add_column("Binary", justify="center", style="yellow")
@@ -159,7 +160,7 @@ def get_dataset_stats(dataset, tree):
         title="\n[bold]Contribution of Each Emotion[/bold]",
         header_style="bold magenta",
         show_header=True,
-        width=50,
+        width=85,
     )
     emotion_table.add_column("Emotion", justify="left", style="bold cyan")
     emotion_table.add_column("Binary", justify="center", style="yellow")
@@ -188,7 +189,7 @@ def get_dataset_stats(dataset, tree):
         ),
         title="[bold]Dataset Summary[/bold]",
         title_align="center",
-        width=60,
+        width=96,
     )
 
-    tree.add(panel)
+    tree.add(Group(panel, Text("\n", style="reset")))

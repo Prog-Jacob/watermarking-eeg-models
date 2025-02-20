@@ -6,7 +6,9 @@ args = config.get_config()
 import os
 import logging
 from utils import set_seed
+from rich.tree import Tree
 from dataset import get_dataset
+from results import _get_result_stats, print_to_console
 from torcheeg.model_selection import KFold, train_test_split
 
 seed = args["seed"]
@@ -50,19 +52,21 @@ dataset = get_dataset(architecture, working_dir, data_path)
 
 
 if experiment == "show_stats":
-    from rich import print
-    from rich.tree import Tree
+    from results import get_results_stats
     from dataset import get_dataset_stats
 
     tree = Tree(f"[bold cyan]\nStatistics and Results for {architecture}[/bold cyan]")
+
     get_dataset_stats(dataset, tree)
-    print(tree)
+    get_results_stats(working_dir, tree)
+    print_to_console(tree)
     exit()
 
 
 import math
 import json
 from torch import nn
+from pathlib import Path
 from torch.utils.data import DataLoader
 from triggerset import TriggerSet, Verifier
 from torcheeg.trainers import ClassifierTrainer
@@ -70,7 +74,16 @@ from models import get_model, load_model, get_ckpt_file
 
 
 def train():
-    results = dict()
+    experiment_details = dict()
+    experiment_details["parameters"] = {
+        k: v
+        for k, v in args.items()
+        if v
+        and k
+        not in ["data_path", "experiment", "evaluate", "verbose", "base_models_dir"]
+    }
+    experiment_details["results"] = dict()
+    results = experiment_details["results"]
 
     model_path = f"{working_dir}/{experiment}/{'.' if not base_models else '_'.join(base_models.strip('/').split('/')[-2:])}/{fine_tuning_mode or transfer_learning_mode or ''}/"
     os.makedirs(model_path, exist_ok=True)
@@ -140,8 +153,10 @@ def train():
             prune = getattr(Pruning, pruning_method)()
 
             while pruning_percent < 100:
-                model = get_model(architecture)
                 load_path = f"{base_models}/{fold}"
+                trainer = ClassifierTrainer(
+                    model=model, num_classes=16, lr=lr, accelerator="gpu"
+                )
                 model = load_model(model, get_ckpt_file(load_path))
                 model.eval()
 
@@ -150,11 +165,12 @@ def train():
                         prune(module, name="weight", amount=pruning_percent / 100)
 
                 results[fold][pruning_percent] = evaluate()
+                model = get_model(architecture)
 
                 if pruning_mode == "linear":
                     pruning_percent += pruning_delta
                 else:
-                    pruning_percent = int(math.ceil(pruning_percent * pruning_delta))
+                    pruning_percent = math.ceil(pruning_percent * pruning_delta)
         elif experiment in [
             "pretrain",
             "fine_tuning",
@@ -261,10 +277,14 @@ def train():
             results[fold] = evaluate()
 
         with open(results_path, "w") as f:
-            json.dump(results, f)
+            json.dump(experiment_details, f)
 
         if training_mode == "quick":
             break
+
+    tree = Tree(f"[bold cyan]Results[/bold cyan]")
+    _get_result_stats(working_dir, [str(Path(results_path))], tree)
+    print_to_console(tree)
 
 
 if __name__ == "__main__":
