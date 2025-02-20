@@ -4,15 +4,13 @@ args = config.get_config()
 
 
 import os
-import math
-import json
-from utils import *
-from torch import nn
-from torch.utils.data import DataLoader
-from triggerset import TriggerSet, Verifier
-from torcheeg.trainers import ClassifierTrainer
+import logging
+from utils import set_seed
+from dataset import get_dataset
 from torcheeg.model_selection import KFold, train_test_split
 
+seed = args["seed"]
+verbose = args["verbose"]
 
 folds = args["folds"]
 epochs = args["epochs"]
@@ -37,6 +35,11 @@ training_mode = args["training_mode"]
 fine_tuning_mode = args["fine_tuning_mode"]
 transfer_learning_mode = args["transfer_learning_mode"]
 
+if seed is not None:
+    set_seed(seed)
+
+logger = logging.getLogger("torcheeg")
+logger.setLevel(getattr(logging, verbose.upper()))
 
 working_dir = f"./results/{architecture}"
 os.makedirs(working_dir, exist_ok=True)
@@ -47,9 +50,23 @@ dataset = get_dataset(architecture, working_dir, data_path)
 
 
 if experiment == "show_stats":
-    print(f"Dataset label distribution:")
-    get_dataset_stats(dataset)
+    from rich import print
+    from rich.tree import Tree
+    from dataset import get_dataset_stats
+
+    tree = Tree(f"[bold cyan]\nStatistics and Results for {architecture}[/bold cyan]")
+    get_dataset_stats(dataset, tree)
+    print(tree)
     exit()
+
+
+import math
+import json
+from torch import nn
+from torch.utils.data import DataLoader
+from triggerset import TriggerSet, Verifier
+from torcheeg.trainers import ClassifierTrainer
+from models import get_model, load_model, get_ckpt_file
 
 
 def train():

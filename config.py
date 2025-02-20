@@ -4,26 +4,28 @@ import argparse
 def get_config():
     # Constants for allowed values
     ALLOWED_EVALUATIONS = [
+        "eeg",
         "correct_watermark",
         "wrong_watermark",
         "new_watermark",
-        "eeg",
     ]
     ALLOWED_EXPERIMENTS = [
-        "pretrain",
-        "from_scratch",
+        "show_stats",
         "no_watermark",
+        "from_scratch",
+        "pretrain",
         "new_watermark",
         "pruning",
         "fine_tuning",
         "quantization",
         "transfer_learning",
     ]
+    TRAINING_MODES = ["skip", "quick", "full"]
     ARCHITECTURES = ["CCNN", "EEGNet", "TSCeption"]
-    TRAINING_MODES = ["full", "quick", "skip"]
+    VERBOSE_LEVELS = ["info", "debug", "warning", "error", "critical"]
 
     parser = argparse.ArgumentParser(
-        description="Configure and run experiments for watermarking EEG-based neural networks."
+        description="Configure and run experiments for watermarking EEG-based neural networks.",
     )
 
     # Experiment Configuration
@@ -32,21 +34,21 @@ def get_config():
         "--experiment",
         required=True,
         choices=ALLOWED_EXPERIMENTS,
-        help=f"Experiment to run. Options: {', '.join(ALLOWED_EXPERIMENTS)}.",
+        help="Choose one experiment from the above experiments.",
     )
     config_group.add_argument(
         "--evaluate",
         nargs="+",
         default=ALLOWED_EVALUATIONS,
         choices=ALLOWED_EVALUATIONS,
-        help=f"Evaluations to perform. Options: {', '.join(ALLOWED_EVALUATIONS)}.",
+        metavar="DIMENSION",
+        help=f"Choose any number of dimensions to evaluate from {{{','.join(ALLOWED_EVALUATIONS)}}}.",
     )
     config_group.add_argument(
         "--architecture",
         required=True,
         default="CCNN",
         choices=ARCHITECTURES,
-        help=f"Model architecture. Options: {', '.join(ARCHITECTURES)}.",
     )
 
     # Training Parameters
@@ -55,7 +57,7 @@ def get_config():
         "--training_mode",
         default="full",
         choices=TRAINING_MODES,
-        help=f"Training mode. Options: {', '.join(TRAINING_MODES)}.",
+        help="Skip training, quick training of only 1 fold, or full training of all folds.",
     )
     train_group.add_argument("--batch", type=int, help="Batch size for training.")
     train_group.add_argument("--epochs", type=int, help="Number of training epochs.")
@@ -64,24 +66,28 @@ def get_config():
         "--update_lr_by",
         type=float,
         default=1.0,
+        metavar="x",
         help="Multiply learning rate by x every n epochs. Default x: 1.0",
     )
     train_group.add_argument(
         "--update_lr_every",
         type=int,
         default=10,
+        metavar="n",
         help="Multiply learning rate by x every n epochs. Default n: 10",
     )
     train_group.add_argument(
         "--update_lr_until",
         type=float,
         default=1e-5,
+        metavar="ε",
         help="Update learning until it's out of [ε, 1.0]. Default ε: 1e-5",
     )
     train_group.add_argument(
         "--folds",
         type=int,
         default=10,
+        metavar="k",
         help="Number of k-fold cross-validation splits. Default k: 10.",
     )
 
@@ -89,11 +95,14 @@ def get_config():
     path_group = parser.add_argument_group("Path Configuration")
     path_group.add_argument(
         "--data_path",
+        metavar="PATH",
         default="./data/data_preprocessed_python",
         help="Path to processed data directory. Default: './data/data_preprocessed_python'.",
     )
     path_group.add_argument(
-        "--base_models_dir", help="Directory containing base models for experiments."
+        "--base_models_dir",
+        metavar="DIR",
+        help="Directory containing base models for experiments.",
     )
 
     # Experiment-Specific Parameters
@@ -101,29 +110,42 @@ def get_config():
     exp_params_group.add_argument(
         "--pruning_method",
         choices=["random", "ascending", "descending"],
-        help="Pruning method. Options: 'random', 'ascending' (nullify least-valued nodes), 'descending' (nullify most-valued nodes).",
+        help="Random, ascending (nullify least-valued nodes), descending (nullify most-valued nodes).",
     )
     exp_params_group.add_argument(
         "--pruning_mode",
         choices=["linear", "exponential"],
-        help="Pruning mode. Options: 'linear' (delta=5) or 'exponential' (delta=1.25).",
+        help="Linear increments pruning percentage by δ till it reaches 100, whereas exponential multiplies by it.",
     )
     exp_params_group.add_argument(
         "--pruning_delta",
+        metavar="δ",
         type=float,
-        help="Pruning delta value. Recommended: 5 for linear, 1.25 for exponential.",
+        help="Increment/multiply pruning percent by δ. Recommended: 5 for linear, 1.25 for exponential.",
     )
     exp_params_group.add_argument(
         "--fine_tuning_mode",
         choices=["ftll", "ftal", "rtll", "rtal"],
-        help="Fine-tuning mode. Options: 'ftll' (fine-tune last layer), 'ftal' (fine-tune all layers), "
-        "'rtll' (retrain last layer), 'rtal' (retrain all layers).",
+        help="FTLL (fine-tune last layer), FTAL (fine-tune all layers), RTLL (retrain last layer), and RTAL (retrain all layers).",
     )
     exp_params_group.add_argument(
         "--transfer_learning_mode",
         choices=["added", "dense", "all"],
-        help="Transfer learning mode. Options: 'added' (add new layers), 'dense' (fine-tune dense layers), "
-        "'all' (fine-tune all layers).",
+        help="Add two dense layers then perform fine tuning. Added (fine-tune added layers), dense (fine-tune dense layers), and all (fine-tune all layers).",
+    )
+
+    # Other Parameters
+    other_group = parser.add_argument_group("Other Parameters")
+    other_group.add_argument(
+        "--seed",
+        type=int,
+        help="Seed for reproducibility.",
+    )
+    other_group.add_argument(
+        "--verbose",
+        choices=VERBOSE_LEVELS,
+        default="info",
+        help=f"How much information to log. Default is 'info'.",
     )
 
     # Parse and validate arguments
@@ -143,7 +165,7 @@ def validate_arguments(parser, args):
         "transfer_learning",
     ]
 
-    if args["experiment"] in ["quantization", "pruning"]:
+    if args["experiment"] in ["show_stats", "quantization", "pruning"]:
         args["training_mode"] = "skip"
 
     if args["training_mode"] != "skip":
@@ -161,8 +183,8 @@ def validate_arguments(parser, args):
 
     validation_rules = {
         "pruning": ["pruning_method", "pruning_mode", "pruning_delta"],
-        "fine_tuning": ["fine_tuning_mode"],
         "transfer_learning": ["transfer_learning_mode"],
+        "fine_tuning": ["fine_tuning_mode"],
     }
 
     if args["experiment"] in validation_rules:

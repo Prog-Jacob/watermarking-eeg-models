@@ -36,12 +36,11 @@ python train.py [args]
 
 ### Available Arguments:
 
-```bash
-usage: train.py [-h] --experiment {pretrain,from_scratch,no_watermark,new_watermark,pruning,fine_tuning,quantization,transfer_learning}
-                [--evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]] --architecture {CCNN,EEGNet,TSCeption}
-                [--training_mode {full,quick,skip}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE] [--update_lr_by UPDATE_LR_BY] [--update_lr_every UPDATE_LR_EVERY]
-                [--update_lr_until UPDATE_LR_UNTIL] [--folds FOLDS] [--data_path DATA_PATH] [--base_models_dir BASE_MODELS_DIR] [--pruning_method {random,ascending,descending}]
-                [--pruning_mode {linear,exponential}] [--pruning_delta PRUNING_DELTA] [--fine_tuning_mode {ftll,ftal,rtll,rtal}] [--transfer_learning_mode {added,dense,all}]
+```
+usage: train.py [-h] --experiment {show_stats,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning} [--evaluate DIMENSION [DIMENSION ...]]
+                --architecture {CCNN,EEGNet,TSCeption} [--training_mode {skip,quick,full}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE] [--update_lr_by x] [--update_lr_every n]
+                [--update_lr_until ε] [--folds k] [--data_path PATH] [--base_models_dir DIR] [--pruning_method {random,ascending,descending}] [--pruning_mode {linear,exponential}]
+                [--pruning_delta δ] [--fine_tuning_mode {ftll,ftal,rtll,rtal}] [--transfer_learning_mode {added,dense,all}] [--seed SEED] [--verbose {info,debug,warning,error,critical}]
 
 Configure and run experiments for watermarking EEG-based neural networks.
 
@@ -49,44 +48,43 @@ options:
   -h, --help            Show this help message and exit
 
 Experiment Configuration:
-  --experiment {pretrain,from_scratch,no_watermark,new_watermark,pruning,fine_tuning,quantization,transfer_learning}
-                        Experiment to run. Options: pretrain, from_scratch, no_watermark, new_watermark, pruning, fine_tuning, quantization, transfer_learning.
-  --evaluate {correct_watermark,wrong_watermark,new_watermark,eeg} [{correct_watermark,wrong_watermark,new_watermark,eeg} ...]
-                        Evaluations to perform. Options: correct_watermark, wrong_watermark, new_watermark, eeg.
+  --experiment {show_stats,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning}
+                        Choose one experiment from the above experiments.
+  --evaluate DIMENSION [DIMENSION ...]
+                        Choose any number of dimensions to evaluate from {eeg,correct_watermark,wrong_watermark,new_watermark}.
   --architecture {CCNN,EEGNet,TSCeption}
-                        Model architecture. Options: CCNN, EEGNet, TSCeption.
 
 Training Parameters:
-  --training_mode {full,quick,skip}
-                        Training mode. Options: full, quick, skip.
+  --training_mode {skip,quick,full}
+                        Skip training, quick training of only 1 fold, or full training of all folds.
   --batch BATCH         Batch size for training.
   --epochs EPOCHS       Number of training epochs.
   --lrate LRATE         Learning rate for training.
-  --update_lr_by UPDATE_LR_BY
-                        Multiply learning rate by x every n epochs. Default x: 1.0
-  --update_lr_every UPDATE_LR_EVERY
-                        Multiply learning rate by x every n epochs. Default n: 10
-  --update_lr_until UPDATE_LR_UNTIL
-                        Update learning until it's out of [ε, 1.0]. Default ε: 1e-5
-  --folds FOLDS         Number of k-fold cross-validation splits. Default k: 10.
+  --update_lr_by x      Multiply learning rate by x every n epochs. Default x: 1.0
+  --update_lr_every n   Multiply learning rate by x every n epochs. Default n: 10
+  --update_lr_until ε   Update learning until it's out of [ε, 1.0]. Default ε: 1e-5
+  --folds k             Number of k-fold cross-validation splits. Default k: 10.
 
 Path Configuration:
-  --data_path DATA_PATH
-                        Path to processed data directory. Default: './data/data_preprocessed_python'.
-  --base_models_dir BASE_MODELS_DIR
+  --data_path PATH      Path to processed data directory. Default: './data/data_preprocessed_python'.
+  --base_models_dir DIR
                         Directory containing base models for experiments.
 
 Experiment-Specific Parameters:
   --pruning_method {random,ascending,descending}
-                        Pruning method. Options: 'random', 'ascending' (nullify least-valued nodes), 'descending' (nullify most-valued nodes).
+                        Random, ascending (nullify least-valued nodes), descending (nullify most-valued nodes).
   --pruning_mode {linear,exponential}
-                        Pruning mode. Options: 'linear' (delta=5) or 'exponential' (delta=1.25).
-  --pruning_delta PRUNING_DELTA
-                        Pruning delta value. Recommended: 5 for linear, 1.25 for exponential.
+                        Linear increments pruning percentage by δ till it reaches 100, whereas exponential multiplies by it.
+  --pruning_delta δ     Increment/multiply pruning percent by δ. Recommended: 5 for linear, 1.25 for exponential.
   --fine_tuning_mode {ftll,ftal,rtll,rtal}
-                        Fine-tuning mode. Options: 'ftll' (fine-tune last layer), 'ftal' (fine-tune all layers), 'rtll' (retrain last layer), 'rtal' (retrain all layers).
+                        FTLL (fine-tune last layer), FTAL (fine-tune all layers), RTLL (retrain last layer), and RTAL (retrain all layers).
   --transfer_learning_mode {added,dense,all}
-                        Transfer learning mode. Options: 'added' (add new layers), 'dense' (fine-tune dense layers), 'all' (fine-tune all layers).
+                        Add two dense layers then perform transfer learning. Added (fine-tune added layers), dense (fine-tune dense layers), and all (fine-tune all layers).
+
+Other Parameters:
+  --seed SEED           Seed for reproducibility.
+  --verbose {info,debug,warning,error,critical}
+                        How much information to log. Default is 'info'.
 ```
 
 ### Example Usage:
