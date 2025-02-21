@@ -96,7 +96,7 @@ def get_results(json_path):
         width = None
     else:
         width = 70
-        rendered_results = Tree(f"[bold]Accuracies[/bold]")
+        rendered_results = Tree("[bold]Accuracies[/bold]")
         convert_dict_to_tree(aggregated_results, rendered_results, 5)
 
     content = Group(table_panel, rendered_results, fit=True)

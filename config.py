@@ -11,6 +11,7 @@ def get_config():
     ]
     ALLOWED_EXPERIMENTS = [
         "show_stats",
+        "show_stats_plots",
         "no_watermark",
         "from_scratch",
         "pretrain",
@@ -145,7 +146,7 @@ def get_config():
         "--verbose",
         choices=VERBOSE_LEVELS,
         default="info",
-        help=f"How much information to log. Default is 'info'.",
+        help="How much information to log. Default is 'info'.",
     )
 
     # Parse and validate arguments
@@ -165,7 +166,9 @@ def validate_arguments(parser, args):
         "transfer_learning",
     ]
 
-    if args["experiment"] in ["show_stats", "quantization", "pruning"]:
+    if args["experiment"] in ["quantization", "pruning"]:
+        args["training_mode"] = "skip"
+    if args["experiment"].startswith("show_stats"):
         args["training_mode"] = "skip"
 
     if args["training_mode"] != "skip":

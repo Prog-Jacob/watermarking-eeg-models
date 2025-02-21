@@ -51,13 +51,15 @@ cv = KFold(n_splits=folds, shuffle=True, split_path=f"{working_dir}/{folds}-spli
 dataset = get_dataset(architecture, working_dir, data_path)
 
 
-if experiment == "show_stats":
+if experiment.startswith("show_stats"):
     from results import get_results_stats
-    from dataset import get_dataset_stats
+    from dataset import get_dataset_stats, get_dataset_plots
+
+    if experiment.endswith("plots"):
+        get_dataset_plots(dataset, architecture)
 
     tree = Tree(f"[bold cyan]\nStatistics and Results for {architecture}[/bold cyan]")
-
-    get_dataset_stats(dataset, tree)
+    get_dataset_stats(dataset, architecture, tree)
     get_results_stats(working_dir, tree)
     print_to_console(tree)
     exit()
@@ -282,7 +284,7 @@ def train():
         if training_mode == "quick":
             break
 
-    tree = Tree(f"[bold cyan]Results[/bold cyan]")
+    tree = Tree("[bold cyan]Results[/bold cyan]")
     _get_result_stats(working_dir, [str(Path(results_path))], tree)
     print_to_console(tree)
 
