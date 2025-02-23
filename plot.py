@@ -52,7 +52,8 @@ def plot_topomap(
         )
     if show_fig:
         fig.show()
-    return fig
+    else:
+        plt.close(fig)
 
 
 def plot_signal(tensor, fig_label, channel_list, sampling_rate=128, save_fig=True):
