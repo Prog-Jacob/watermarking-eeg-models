@@ -88,9 +88,9 @@ def get_config():
     train_group.add_argument(
         "--folds",
         type=int,
-        default=10,
+        default=5,
         metavar="k",
-        help="Number of k-fold cross-validation splits. Default k: 10.",
+        help="Number of k-fold cross-validation splits. Default k: 5.",
     )
 
     # Path Configuration

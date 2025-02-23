@@ -4,6 +4,7 @@ args = config.get_config()
 
 
 import os
+import random
 import logging
 from utils import set_seed
 from rich.tree import Tree
@@ -37,8 +38,9 @@ training_mode = args["training_mode"]
 fine_tuning_mode = args["fine_tuning_mode"]
 transfer_learning_mode = args["transfer_learning_mode"]
 
-if seed is not None:
-    set_seed(seed)
+if seed is None:
+    seed = int(random.randint(0, 1000))
+set_seed(seed)
 
 logger = logging.getLogger("torcheeg")
 logger.setLevel(getattr(logging, verbose.upper()))

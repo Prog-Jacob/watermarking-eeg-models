@@ -145,7 +145,7 @@ def get_dataset_stats(dataset, architecture, tree):
 
     map = get_labels_map(dataset)
     total_samples = sum(map.values())
-    plot_emotion_connectivity(map, EMOTIONS, f"{architecture} Emotions Relationship")
+    plot_emotion_connectivity(map, EMOTIONS, "Emotions Relationship")
 
     for i, (key, value) in enumerate(map.items()):
         percentage = (value / total_samples) * 100
