@@ -182,6 +182,13 @@ def train():
         ]:
             load_path = f"{base_models}/{fold}"
             model = load_model(model, get_ckpt_file(load_path))
+        elif experiment == "feature_attribution":
+            from feature_attribution import get_feature_attribution
+
+            load_path = f"{base_models}/{fold}"
+            model = load_model(model, get_ckpt_file(load_path))
+            get_feature_attribution(model, train_dataset, test_dataset, architecture)
+            exit()
 
         if experiment == "transfer_learning":
             import transfer_learning

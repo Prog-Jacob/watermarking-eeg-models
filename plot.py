@@ -16,6 +16,8 @@ def plot_topomap(
     channel_list,
     labeled_plot_points,
     save_fig=True,
+    show_fig=False,
+    show_names=None,
 ):
     ch_types = ["eeg"] * len(channel_list)
     tensor = tensor.detach().cpu().numpy()
@@ -36,6 +38,7 @@ def plot_topomap(
             info,
             axes=axes[0, i],
             show=False,
+            names=channel_list if show_names else None,
             sphere=(0.0, 0.0, 0.0, 0.11),
         )
         axes[0, i].set_title(point_label, fontsize=20, fontname="Liberation Serif")
@@ -47,7 +50,8 @@ def plot_topomap(
         fig.savefig(
             f"./results/Topomap - {fig_label}.png", dpi=300, bbox_inches="tight"
         )
-
+    if show_fig:
+        fig.show()
     return fig
 
 

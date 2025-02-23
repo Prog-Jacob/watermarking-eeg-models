@@ -20,6 +20,7 @@ def get_config():
         "fine_tuning",
         "quantization",
         "transfer_learning",
+        "feature_attribution",
     ]
     TRAINING_MODES = ["skip", "quick", "full"]
     ARCHITECTURES = ["CCNN", "EEGNet", "TSCeption"]
@@ -164,9 +165,10 @@ def validate_arguments(parser, args):
         "quantization",
         "new_watermark",
         "transfer_learning",
+        "feature_attribution",
     ]
 
-    if args["experiment"] in ["quantization", "pruning"]:
+    if args["experiment"] in ["quantization", "pruning", "feature_attribution"]:
         args["training_mode"] = "skip"
     if args["experiment"].startswith("show_stats"):
         args["training_mode"] = "skip"

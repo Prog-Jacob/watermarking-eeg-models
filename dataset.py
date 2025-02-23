@@ -270,11 +270,12 @@ def transform_back_to_origin(sample, architecture):
         case "EEGNet" | "TSCeption":
             return sample.squeeze(0)
         case "CCNN":
-            sample = sample.reshape(-1, 4)
+            sample = sample.reshape(4, -1)
+            sample = sample.permute(1, 0)
             return transforms.PickElectrode(
                 transforms.PickElectrode.to_index_list(
-                    DEAP_CHANNEL_LIST,
                     np.array(DEAP_LOCATION_LIST).flatten().tolist(),
+                    DEAP_CHANNEL_LIST,
                 )
             )(eeg=sample)["eeg"]
         case _:
