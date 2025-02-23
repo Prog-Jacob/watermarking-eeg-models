@@ -31,9 +31,9 @@ def get_model(architecture):
                 dropout=0.5,
                 kernel_1=64,
                 kernel_2=16,
-                F1=8,
-                F2=16,
-                D=2,
+                F1=16,
+                F2=32,
+                D=4,
                 num_classes=16,
             )
 
