@@ -132,8 +132,18 @@ def train():
                         verifier=verifier,
                     )
 
-                    null_set_loader = DataLoader(null_set, batch_size=batch_size)
-                    true_set_loader = DataLoader(true_set, batch_size=batch_size)
+                    null_set_loader = DataLoader(
+                        null_set,
+                        batch_size=batch_size,
+                        prefetch_factor=2,
+                        num_workers=2,
+                    )
+                    true_set_loader = DataLoader(
+                        true_set,
+                        batch_size=batch_size,
+                        prefetch_factor=2,
+                        num_workers=2,
+                    )
 
                     results[eval_dimension] = {
                         "null_set": trainer.test(
@@ -144,7 +154,12 @@ def train():
                         ),
                     }
                 elif eval_dimension == "eeg":
-                    test_loader = DataLoader(test_dataset, batch_size=batch_size)
+                    test_loader = DataLoader(
+                        test_dataset,
+                        batch_size=batch_size,
+                        prefetch_factor=2,
+                        num_workers=2,
+                    )
                     results[eval_dimension] = trainer.test(
                         test_loader, enable_model_summary=True
                     )
@@ -261,8 +276,19 @@ def train():
                     verifier=verifier,
                 )
 
-            val_loader = DataLoader(val_dataset, shuffle=True, batch_size=batch_size)
-            train_loader = DataLoader(trigger_set, shuffle=True, batch_size=batch_size)
+            val_loader = DataLoader(
+                val_dataset,
+                batch_size=batch_size,
+                prefetch_factor=2,
+                num_workers=2,
+            )
+            train_loader = DataLoader(
+                trigger_set,
+                shuffle=True,
+                batch_size=batch_size,
+                prefetch_factor=2,
+                num_workers=2,
+            )
 
             trainer.fit(
                 train_loader,

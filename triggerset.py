@@ -130,8 +130,8 @@ class TriggerSet(Dataset):
             results.extend([apply_null_embedding(s, filter, t) for s, t in trigger_set])
 
         random.shuffle(results)
-        self.data = torch.stack([s for s, _ in results]).to("cuda")
-        self.labels = torch.tensor([t for _, t in results], dtype=torch.long).to("cuda")
+        self.data = torch.stack([s for s, _ in results])
+        self.labels = torch.tensor([t for _, t in results], dtype=torch.long)
 
     def __len__(self):
         return len(self.data)
