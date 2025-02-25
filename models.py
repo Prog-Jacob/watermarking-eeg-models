@@ -16,9 +16,9 @@ def get_model(architecture):
                 num_classes=16,
                 num_electrodes=28,
                 sampling_rate=128,
-                num_T=15,
-                num_S=15,
-                hid_channels=32,
+                num_T=60,
+                num_S=60,
+                hid_channels=128,
                 dropout=0.5,
             ).to("cuda")
 
@@ -31,9 +31,9 @@ def get_model(architecture):
                 dropout=0.5,
                 kernel_1=64,
                 kernel_2=16,
-                F1=16,
-                F2=32,
-                D=4,
+                F1=32,
+                F2=64,
+                D=8,
                 num_classes=16,
             ).to("cuda")
 
