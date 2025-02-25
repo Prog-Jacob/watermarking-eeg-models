@@ -2,12 +2,12 @@ import os
 from torch import load
 
 
-def get_model(architecture):
+def get_model(architecture, device):
     match architecture:
         case "CCNN":
             from torcheeg.models import CCNN
 
-            return CCNN(num_classes=16, in_channels=4, grid_size=(9, 9)).to("cuda")
+            return CCNN(num_classes=16, in_channels=4, grid_size=(9, 9)).to(device)
 
         case "TSCeption":
             from torcheeg.models import TSCeption
@@ -20,7 +20,7 @@ def get_model(architecture):
                 num_S=60,
                 hid_channels=128,
                 dropout=0.5,
-            ).to("cuda")
+            ).to(device)
 
         case "EEGNet":
             from torcheeg.models import EEGNet
@@ -35,7 +35,7 @@ def get_model(architecture):
                 F2=64,
                 D=8,
                 num_classes=16,
-            ).to("cuda")
+            ).to(device)
 
         case _:
             raise ValueError(f"Invalid architecture: {architecture}")

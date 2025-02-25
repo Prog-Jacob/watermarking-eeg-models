@@ -27,11 +27,11 @@ def get_feature_attribution(
     train_dataset,
     test_dataset,
     architecture,
+    device,
     leader_size=500,
     explain_size=100,
     batch_size=32,
 ):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device).eval()
 
     leader_size = min(leader_size, len(train_dataset))

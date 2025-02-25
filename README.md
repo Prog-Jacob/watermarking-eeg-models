@@ -41,12 +41,12 @@ usage: train.py [-h] --experiment {show_stats,show_stats_plots,no_watermark,from
                 [--evaluate DIMENSION [DIMENSION ...]] --architecture {CCNN,EEGNet,TSCeption} [--training_mode {skip,quick,full}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE]
                 [--update_lr_by x] [--update_lr_every n] [--update_lr_until ε] [--folds k] [--data_path PATH] [--base_models_dir DIR] [--pruning_method {random,ascending,descending}]
                 [--pruning_mode {linear,exponential}] [--pruning_delta δ] [--fine_tuning_mode {ftll,ftal,rtll,rtal}] [--transfer_learning_mode {added,dense,all}] [--seed SEED]
-                [--verbose {info,debug,warning,error,critical}]
+                [--verbose {info,debug,warning,error,critical}] [--device {cpu,cuda}]
 
 Configure and run experiments for watermarking EEG-based neural networks.
 
 options:
-  -h, --help            Show this help message and exit
+  -h, --help            show this help message and exit
 
 Experiment Configuration:
   --experiment {show_stats,show_stats_plots,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning,feature_attribution}
@@ -64,7 +64,7 @@ Training Parameters:
   --update_lr_by x      Multiply learning rate by x every n epochs. Default x: 1.0
   --update_lr_every n   Multiply learning rate by x every n epochs. Default n: 10
   --update_lr_until ε   Update learning until it's out of [ε, 1.0]. Default ε: 1e-5
-  --folds k             Number of k-fold cross-validation splits. Default k: 10.
+  --folds k             Number of k-fold cross-validation splits. Default k: 5.
 
 Path Configuration:
   --data_path PATH      Path to processed data directory. Default: './data/data_preprocessed_python'.
@@ -86,6 +86,7 @@ Other Parameters:
   --seed SEED           Seed for reproducibility.
   --verbose {info,debug,warning,error,critical}
                         How much information to log. Default is 'info'.
+  --device {cpu,cuda}   Device to run the experiment on. Default is 'cuda'.
 ```
 
 ### Example Usage:

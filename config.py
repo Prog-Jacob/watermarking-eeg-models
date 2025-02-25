@@ -149,6 +149,12 @@ def get_config():
         default="info",
         help="How much information to log. Default is 'info'.",
     )
+    other_group.add_argument(
+        "--device",
+        choices=["cpu", "cuda"],
+        default="cuda",
+        help="Device to run the experiment on. Default is 'cuda'.",
+    )
 
     # Parse and validate arguments
     args = vars(parser.parse_args())

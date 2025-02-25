@@ -13,6 +13,7 @@ from results import _get_result_stats, print_to_console
 from torcheeg.model_selection import KFold, train_test_split
 
 seed = args["seed"]
+device = args["device"]
 verbose = args["verbose"]
 
 folds = args["folds"]
@@ -106,10 +107,13 @@ def train():
         results[fold] = dict()
         save_path = f"{model_path}/models/{fold}"
 
-        model = get_model(architecture)
+        model = get_model(architecture, device)
 
         trainer = ClassifierTrainer(
-            model=model, num_classes=16, lr=lr, accelerator="gpu"
+            model=model,
+            num_classes=16,
+            lr=lr,
+            accelerator="gpu" if device == "cuda" else "cpu",
         )
 
         def evaluate():
@@ -174,7 +178,10 @@ def train():
             while pruning_percent < 100:
                 load_path = f"{base_models}/{fold}"
                 trainer = ClassifierTrainer(
-                    model=model, num_classes=16, lr=lr, accelerator="gpu"
+                    model=model,
+                    num_classes=16,
+                    lr=lr,
+                    accelerator="gpu" if device == "cuda" else "cpu",
                 )
                 model = load_model(model, get_ckpt_file(load_path))
                 model.eval()
@@ -184,7 +191,7 @@ def train():
                         prune(module, name="weight", amount=pruning_percent / 100)
 
                 results[fold][pruning_percent] = evaluate()
-                model = get_model(architecture)
+                model = get_model(architecture, device)
 
                 if pruning_mode == "linear":
                     pruning_percent += pruning_delta
@@ -204,7 +211,9 @@ def train():
 
             load_path = f"{base_models}/{fold}"
             model = load_model(model, get_ckpt_file(load_path))
-            get_feature_attribution(model, train_dataset, test_dataset, architecture)
+            get_feature_attribution(
+                model, train_dataset, test_dataset, architecture, device
+            )
             exit()
 
         if experiment == "transfer_learning":
