@@ -31,9 +31,9 @@ def get_model(architecture, device):
                 dropout=0.5,
                 kernel_1=64,
                 kernel_2=16,
-                F1=32,
-                F2=64,
-                D=8,
+                F1=16,
+                F2=32,
+                D=32,
                 num_classes=16,
             ).to(device)
 
