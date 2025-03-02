@@ -40,16 +40,18 @@ def get_graph(fig, xs, ys, i, label="Task"):
     fig.plot(X, Y, lc=i, label=title(label.strip(" - ")))
 
 
-def create_graph(x_label="Pruning", y_label="Accuracy", min=0, max=100):
+def create_graph(
+    x_label="Pruning", y_label="Accuracy", x_limits=(0, 90), y_limits=(-5, 105)
+):
     fig = plt.Figure()
 
     fig.width = 50
-    fig.height = 25
+    fig.height = 22
     fig.x_label = x_label
     fig.y_label = y_label
     fig.color_mode = "byte"
-    fig.set_x_limits(min_=min, max_=max)
-    fig.set_y_limits(min_=min, max_=max)
+    fig.set_x_limits(min_=x_limits[0], max_=x_limits[1])
+    fig.set_y_limits(min_=y_limits[0], max_=y_limits[1])
 
     return fig
 

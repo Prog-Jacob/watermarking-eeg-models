@@ -183,7 +183,10 @@ def train():
                     lr=lr,
                     accelerator="gpu" if device == "cuda" else "cpu",
                 )
-                model = load_model(model, get_ckpt_file(load_path))
+                if ckpt_file := get_ckpt_file(load_path):
+                    model = load_model(model, ckpt_file)
+                else:
+                    break
                 model.eval()
 
                 for name, module in model.named_modules():
@@ -205,12 +208,18 @@ def train():
             "transfer_learning",
         ]:
             load_path = f"{base_models}/{fold}"
-            model = load_model(model, get_ckpt_file(load_path))
+            if ckpt_file := get_ckpt_file(load_path):
+                model = load_model(model, ckpt_file)
+            else:
+                break
         elif experiment == "feature_attribution":
             from feature_attribution import get_feature_attribution
 
             load_path = f"{base_models}/{fold}"
-            model = load_model(model, get_ckpt_file(load_path))
+            if ckpt_file := get_ckpt_file(load_path):
+                model = load_model(model, ckpt_file)
+            else:
+                break
             get_feature_attribution(
                 model, train_dataset, test_dataset, architecture, device
             )
@@ -236,6 +245,34 @@ def train():
             model.eval()
             results[fold] = evaluate()
 
+        if experiment in ["transfer_learning", "fine_tuning", "new_watermark"]:
+            train_dataset, test_dataset = train_test_split(
+                test_dataset,
+                shuffle=True,
+                test_size=0.2,
+                split_path=f"{save_path}/split",
+            )
+        trigger_set, val_dataset = train_dataset, test_dataset
+
+        if experiment in ["from_scratch", "pretrain", "new_watermark"]:
+            verifier = Verifier.CORRECT
+            if experiment == "new_watermark":
+                verifier = Verifier.NEW
+
+            val_dataset = TriggerSet(
+                test_dataset,
+                architecture,
+                size=(len(test_dataset) // 50, len(test_dataset)),
+                include_train_set=True,
+                verifier=verifier,
+            )
+            trigger_set = TriggerSet(
+                train_dataset,
+                architecture,
+                size=(len(train_dataset) // 50, len(train_dataset)),
+                include_train_set=True,
+                verifier=verifier,
+            )
         if training_mode != "skip":
             from pytorch_lightning.callbacks import (
                 EarlyStopping,
@@ -250,40 +287,6 @@ def train():
                 monitor="val_loss", dirpath=save_path, save_top_k=1, mode="min"
             )
             lr_scheduler = MultiplyLRScheduler(update_lr_x, update_lr_n, update_lr_e)
-
-            if experiment == "no_watermark":
-                val_dataset = test_dataset
-                trigger_set = train_dataset
-            elif experiment in ["transfer_learning", "fine_tuning"]:
-                trigger_set, val_dataset = train_test_split(
-                    test_dataset,
-                    shuffle=True,
-                    test_size=0.2,
-                    split_path=f"{save_path}/split",
-                )
-            else:
-                verifier = Verifier.CORRECT
-                if experiment == "new_watermark":
-                    verifier = Verifier.NEW
-                    trigger_set, val_dataset = train_test_split(
-                        test_dataset,
-                        shuffle=True,
-                        test_size=0.2,
-                        split_path=f"{save_path}/split",
-                    )
-
-                val_dataset = TriggerSet(
-                    test_dataset,
-                    architecture,
-                    include_train_set=True,
-                    verifier=verifier,
-                )
-                trigger_set = TriggerSet(
-                    train_dataset,
-                    architecture,
-                    include_train_set=True,
-                    verifier=verifier,
-                )
 
             val_loader = DataLoader(
                 val_dataset,

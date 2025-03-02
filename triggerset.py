@@ -42,8 +42,8 @@ def transform(signature, channels, num_classes):
     filter = np.zeros(channels)
     label = h1(signature) % num_classes
 
-    pattern_width = math.ceil(channels[0] / 4)
-    pattern_height = math.ceil(channels[1] / 4)
+    pattern_width = math.ceil(channels[0] / 8)
+    pattern_height = math.ceil(channels[1] / 8)
     pattern_size = pattern_width * pattern_height
 
     posi = h3(signature) % (channels[0] - pattern_width + 1)
@@ -107,8 +107,8 @@ class TriggerSet(Dataset):
         self,
         train_set,
         architecture,
-        size=1600,
         seed=2036,
+        size=(1600, 1600),
         do_true_embedding=True,
         do_null_embedding=True,
         include_train_set=False,
@@ -119,15 +119,20 @@ class TriggerSet(Dataset):
 
         random.seed(seed)
         train_set = list(train_set)
-        trigger_set = random.sample(train_set, size)
         results = train_set if include_train_set else []
+        trigger_set = random.sample(train_set, min(max(size), len(train_set)))
 
         if do_true_embedding:
             results.extend(
-                [apply_true_embedding(s, filter, wm_label) for s, _ in trigger_set]
+                [
+                    apply_true_embedding(s, filter, wm_label)
+                    for s, _ in trigger_set[: size[0]]
+                ]
             )
         if do_null_embedding:
-            results.extend([apply_null_embedding(s, filter, t) for s, t in trigger_set])
+            results.extend(
+                [apply_null_embedding(s, filter, t) for s, t in trigger_set[: size[1]]]
+            )
 
         random.shuffle(results)
         self.data = torch.stack([s for s, _ in results])
