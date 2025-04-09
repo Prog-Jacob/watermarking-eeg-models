@@ -117,7 +117,7 @@ python train.py --experiment feature_attribution --architecture CCNN --base_mode
 
 The following are some samples of the these commands outputs:
 
-<img src="https://i.ibb.co/Mx1WNLKt/diagram-20250301.png" alt="Left: Example output of the show_stats experiment showing dataset and results summaries. Top Right: The effect of true/null watermark embedding on the input EEG data for the EEGNet model. Middle Right: The importance analysis of the EEG electrodes for the CCNN model. Bottom Right: Summary of the co-existence among emotion pairs in the DEAP dataset." width="100%">
+<img src="https://github.com/Prog-Jacob/watermarking-eeg-models/releases/download/results/show_stats_output.png" alt="Left: Example output of the show_stats experiment showing dataset and results summaries. Top Right: The effect of true/null watermark embedding on the input EEG data for the EEGNet model. Middle Right: The importance analysis of the EEG electrodes for the CCNN model. Bottom Right: Summary of the co-existence among emotion pairs in the DEAP dataset." width="100%">
 
 ## Citation
 
