@@ -107,3 +107,24 @@ def convert_dict_to_tree(dictionary, tree, depth):
                 tree.add(title(key), guide_style=color, style=f"bold {color}"),
                 depth + 1,
             )
+
+
+def serialize(obj):
+    if isinstance(obj, dict):
+        return {k: serialize(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        obj = [serialize(v) for v in obj]
+        if isinstance(obj, list):
+            try:
+                return sorted(obj)
+            except:
+                return obj
+        return obj
+    elif hasattr(obj, "__class__") and hasattr(obj, "__dict__"):
+        cls_name = f"{obj.__class__.__module__}.{obj.__class__.__qualname__}"
+        state = {k: serialize(v) for k, v in vars(obj).items() if not k.startswith("_")}
+        return {"__class__": cls_name, "state": state}
+    elif callable(obj):
+        return f"{obj.__module__}.{obj.__qualname__}"
+    else:
+        return obj

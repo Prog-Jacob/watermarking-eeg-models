@@ -1,6 +1,10 @@
+import json
 import torch
+import hashlib
 import numpy as np
+from os import path
 from rich.text import Text
+from utils import serialize
 from rich.table import Table
 from rich.panel import Panel
 from rich.align import Align
@@ -19,7 +23,6 @@ from torcheeg.datasets.constants import (
 )
 
 
-EMOTIONS = ["valence", "arousal", "dominance", "liking"]
 TSCEPTION_CHANNEL_LIST = [
     "FP1",
     "AF3",
@@ -52,6 +55,35 @@ TSCEPTION_CHANNEL_LIST = [
 ]
 
 
+class BetterDEAPDataset(DEAPDataset):
+    def __init__(self, *args, io_dir, **kwargs):
+        if kwargs.get("io_path") is None:
+            kwargs["io_path"] = path.join(io_dir, self.hash(*args, **kwargs))
+        super().__init__(*args, **kwargs)
+        if self.__str__ is not None:
+            self.save_state()
+
+    def toJSON(self, *args, **kwargs):
+        trivial_keys = ["root_path", "io_mode", "io_size", "num_worker", "verbose"]
+        kwargs = {k: v for k, v in kwargs.items() if k not in trivial_keys}
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        kwargs["args"] = tuple(args)
+        kwargs = serialize(kwargs)
+
+        self.__str__ = json.dumps(kwargs, sort_keys=True, default=str)
+
+    def hash(self, *args, **kwargs):
+        self.toJSON(*args, **kwargs)
+        return hashlib.md5(self.__str__.encode()).hexdigest()[:10]
+
+    def save_state(self):
+        json.dump(
+            json.loads(self.__str__),
+            open(path.join(self.io_path, "state"), "w"),
+            indent=4,
+        )
+
+
 def get_dataset(architecture, working_dir, dataset_labels, data_path=""):
     label_transform = transforms.Compose(
         [
@@ -67,8 +99,8 @@ def get_dataset(architecture, working_dir, dataset_labels, data_path=""):
             def remove_base_from_eeg(eeg, baseline):
                 return {"eeg": eeg - baseline, "baseline": baseline}
 
-            return DEAPDataset(
-                io_path=f"{working_dir}/dataset",
+            return BetterDEAPDataset(
+                io_dir=f"{working_dir}",
                 root_path=data_path,
                 num_baseline=1,
                 baseline_chunk_size=384,
@@ -88,8 +120,8 @@ def get_dataset(architecture, working_dir, dataset_labels, data_path=""):
             )
 
         case "TSCeption":
-            return DEAPDataset(
-                io_path=f"{working_dir}/dataset",
+            return BetterDEAPDataset(
+                io_dir=f"{working_dir}",
                 root_path=data_path,
                 chunk_size=512,
                 num_baseline=1,
@@ -112,8 +144,8 @@ def get_dataset(architecture, working_dir, dataset_labels, data_path=""):
             )
 
         case "EEGNet":
-            return DEAPDataset(
-                io_path=f"{working_dir}/dataset",
+            return BetterDEAPDataset(
+                io_dir=f"{working_dir}",
                 root_path=data_path,
                 num_baseline=1,
                 online_transform=transforms.Compose(
