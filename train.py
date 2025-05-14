@@ -27,6 +27,7 @@ update_lr_e = args["update_lr_until"]
 
 data_path = args["data_path"]
 experiment = args["experiment"]
+dataset_labels = args["labels"]
 architecture = args["architecture"]
 base_models = args["base_models_dir"]
 evaluation_metrics = args["evaluate"]
@@ -51,7 +52,7 @@ os.makedirs(working_dir, exist_ok=True)
 
 
 cv = KFold(n_splits=folds, shuffle=True, split_path=f"{working_dir}/{folds}-splits")
-dataset = get_dataset(architecture, working_dir, data_path)
+dataset = get_dataset(architecture, working_dir, dataset_labels, data_path)
 
 
 if experiment.startswith("show_stats"):
@@ -62,7 +63,7 @@ if experiment.startswith("show_stats"):
         get_dataset_plots(dataset, architecture)
 
     tree = Tree(f"[bold cyan]\nStatistics and Results for {architecture}[/bold cyan]")
-    get_dataset_stats(dataset, architecture, tree)
+    get_dataset_stats(dataset, tree, dataset_labels)
     get_results_stats(working_dir, tree)
     print_to_console(tree)
     exit()
@@ -107,7 +108,7 @@ def train():
         results[fold] = dict()
         save_path = f"{model_path}/models/{fold}"
 
-        model = get_model(architecture, device)
+        model = get_model(architecture, device, dataset_labels)
 
         trainer = ClassifierTrainer(
             model=model,
@@ -194,7 +195,7 @@ def train():
                         prune(module, name="weight", amount=pruning_percent / 100)
 
                 results[fold][pruning_percent] = evaluate()
-                model = get_model(architecture, device)
+                model = get_model(architecture, device, dataset_labels)
 
                 if pruning_mode == "linear":
                     pruning_percent += pruning_delta

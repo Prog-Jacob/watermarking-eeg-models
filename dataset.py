@@ -52,10 +52,10 @@ TSCEPTION_CHANNEL_LIST = [
 ]
 
 
-def get_dataset(architecture, working_dir, data_path=""):
+def get_dataset(architecture, working_dir, dataset_labels, data_path=""):
     label_transform = transforms.Compose(
         [
-            transforms.Select(EMOTIONS),
+            transforms.Select(dataset_labels),
             transforms.Binary(5.0),
             BinariesToCategory,
         ]
@@ -131,7 +131,8 @@ def get_dataset(architecture, working_dir, data_path=""):
             raise ValueError(f"Invalid architecture: {architecture}")
 
 
-def get_dataset_stats(dataset, architecture, tree):
+def get_dataset_stats(dataset, tree, dataset_labels):
+    width = len(dataset_labels)
     label_table = Table(
         title="\n[bold]Distribution of the Labels[/bold]",
         header_style="bold magenta",
@@ -145,13 +146,13 @@ def get_dataset_stats(dataset, architecture, tree):
 
     map = get_labels_map(dataset)
     total_samples = sum(map.values())
-    plot_emotion_connectivity(map, EMOTIONS, "Emotions Relationship")
+    plot_emotion_connectivity(map, dataset_labels, "Emotions Relationship")
 
     for i, (key, value) in enumerate(map.items()):
         percentage = (value / total_samples) * 100
         label_table.add_row(
             f"{key:02d}",
-            f"{key:04b}",
+            f"{key:0{width}b}",
             f"{value}",
             f"{percentage:.2f}%",
             end_section=i == len(map) - 1,
@@ -177,7 +178,7 @@ def get_dataset_stats(dataset, architecture, tree):
     )
     emotion_table.add_column("Low [white](<5)[/white]", justify="center", style="red")
 
-    for i, emotion in enumerate(EMOTIONS):
+    for i, emotion in enumerate(dataset_labels):
         high = reduce(
             lambda acc, label: acc + map[label] if (label >> i) & 1 else acc,
             map.keys(),
@@ -185,7 +186,7 @@ def get_dataset_stats(dataset, architecture, tree):
         )
         emotion_table.add_row(
             f"[bold]{emotion.title()}[/bold]",
-            f"{(1 << i):04b}",
+            f"{(1 << i):0{width}b}",
             f"{high} [white]({(high / total_samples * 100):.0f}%)[/white]",
             f"{total_samples - high} [white]({(100 - high / total_samples * 100):.0f}%)[/white]",
         )
@@ -293,11 +294,12 @@ def get_channel_list(architecture):
 
 
 def get_labeled_plot_points(architecture):
+    points = 4
     len = 512 if architecture == "TSCeption" else 128
     match architecture:
         case "CCNN":
             return {"theta": 0, "alpha": 1, "beta": 2, "gamma": 3}
         case "EEGNet" | "TSCeption":
-            return {f"{i / 4}s": i * len // 4 for i in range(4)}
+            return {f"{i / points}s": i * len // points for i in range(points)}
         case _:
             raise ValueError(f"Invalid architecture: {architecture}")

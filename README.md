@@ -38,10 +38,10 @@ python train.py [args]
 
 ```
 usage: train.py [-h] --experiment {show_stats,show_stats_plots,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning,feature_attribution}
-                [--evaluate DIMENSION [DIMENSION ...]] --architecture {CCNN,EEGNet,TSCeption} [--training_mode {skip,quick,full}] [--batch BATCH] [--epochs EPOCHS] [--lrate LRATE]
-                [--update_lr_by x] [--update_lr_every n] [--update_lr_until ε] [--folds k] [--data_path PATH] [--base_models_dir DIR] [--pruning_method {random,ascending,descending}]
-                [--pruning_mode {linear,exponential}] [--pruning_delta δ] [--fine_tuning_mode {ftll,ftal,rtll,rtal}] [--transfer_learning_mode {added,dense,all}] [--seed SEED]
-                [--verbose {info,debug,warning,error,critical}] [--device {cpu,cuda}]
+                [--evaluate DIMENSION [DIMENSION ...]] --architecture {CCNN,EEGNet,TSCeption} [--labels LABEL [LABEL ...]] [--training_mode {skip,quick,full}] [--batch BATCH]
+                [--epochs EPOCHS] [--lrate LRATE] [--update_lr_by x] [--update_lr_every n] [--update_lr_until ε] [--folds k] [--data_path PATH] [--base_models_dir DIR]
+                [--pruning_method {random,ascending,descending}] [--pruning_mode {linear,exponential}] [--pruning_delta δ] [--fine_tuning_mode {ftll,ftal,rtll,rtal}]
+                [--transfer_learning_mode {added,dense,all}] [--seed SEED] [--verbose {info,debug,warning,error,critical}] [--device {cpu,cuda}]
 
 Configure and run experiments for watermarking EEG-based neural networks.
 
@@ -52,8 +52,10 @@ Experiment Configuration:
   --experiment {show_stats,show_stats_plots,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning,feature_attribution}
                         Choose one experiment from the above experiments.
   --evaluate DIMENSION [DIMENSION ...]
-                        Choose any number of dimensions to evaluate from {eeg,correct_watermark,wrong_watermark,new_watermark}.
+                        Choose one or more dimension to evaluate from {eeg,correct_watermark,wrong_watermark,new_watermark}.
   --architecture {CCNN,EEGNet,TSCeption}
+  --labels LABEL [LABEL ...]
+                        Choose one or more dataset label from {valence,arousal,dominance,liking}.
 
 Training Parameters:
   --training_mode {skip,quick,full}

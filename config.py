@@ -24,6 +24,7 @@ def get_config():
     ]
     TRAINING_MODES = ["skip", "quick", "full"]
     ARCHITECTURES = ["CCNN", "EEGNet", "TSCeption"]
+    ALLOWED_LABELS = ["valence", "arousal", "dominance", "liking"]
     VERBOSE_LEVELS = ["info", "debug", "warning", "error", "critical"]
 
     parser = argparse.ArgumentParser(
@@ -44,13 +45,21 @@ def get_config():
         default=ALLOWED_EVALUATIONS,
         choices=ALLOWED_EVALUATIONS,
         metavar="DIMENSION",
-        help=f"Choose any number of dimensions to evaluate from {{{','.join(ALLOWED_EVALUATIONS)}}}.",
+        help=f"Choose one or more dimension to evaluate from {{{','.join(ALLOWED_EVALUATIONS)}}}.",
     )
     config_group.add_argument(
         "--architecture",
         required=True,
         default="CCNN",
         choices=ARCHITECTURES,
+    )
+    config_group.add_argument(
+        "--labels",
+        nargs="+",
+        default=ALLOWED_LABELS,
+        choices=ALLOWED_LABELS,
+        metavar="LABEL",
+        help=f"Choose one or more dataset label from {{{','.join(ALLOWED_LABELS)}}}.",
     )
 
     # Training Parameters

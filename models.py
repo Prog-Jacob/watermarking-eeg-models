@@ -2,18 +2,21 @@ import os
 from torch import load
 
 
-def get_model(architecture, device):
+def get_model(architecture, device, labels):
+    num_classes = 2 ** len(labels)
     match architecture:
         case "CCNN":
             from torcheeg.models import CCNN
 
-            return CCNN(num_classes=16, in_channels=4, grid_size=(9, 9)).to(device)
+            return CCNN(num_classes=num_classes, in_channels=4, grid_size=(9, 9)).to(
+                device
+            )
 
         case "TSCeption":
             from torcheeg.models import TSCeption
 
             return TSCeption(
-                num_classes=16,
+                num_classes=num_classes,
                 num_electrodes=28,
                 sampling_rate=128,
                 num_T=60,
@@ -34,7 +37,7 @@ def get_model(architecture, device):
                 F1=32,
                 F2=64,
                 D=16,
-                num_classes=16,
+                num_classes=num_classes,
             ).to(device)
 
         case _:
