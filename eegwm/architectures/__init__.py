@@ -21,8 +21,4 @@ def get_architecture(name: str) -> Architecture:
         raise ValueError(f"Invalid architecture: {name}") from None
 
 
-def architecture_names() -> list[str]:
-    return list(_REGISTRY)
-
-
-__all__ = ["Architecture", "get_architecture", "architecture_names"]
+__all__ = ["Architecture", "get_architecture"]
