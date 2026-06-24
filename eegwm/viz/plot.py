@@ -1,3 +1,5 @@
+"""Topomaps, signal plots, and emotion-connectivity chord diagrams."""
+
 import os
 import mne
 import torch
@@ -5,9 +7,19 @@ import pandas as pd
 from pycirclize import Circos
 import matplotlib.pyplot as plt
 
+from eegwm.constants import RESULTS_DIR
 
-mne.set_log_level("CRITICAL")
-montage = mne.channels.make_standard_montage("standard_1020")
+
+_montage = None
+
+
+def _get_montage():
+    """Build the 10-20 montage lazily so importing this module is side-effect free."""
+    global _montage
+    if _montage is None:
+        mne.set_log_level("CRITICAL")
+        _montage = mne.channels.make_standard_montage("standard_1020")
+    return _montage
 
 
 def plot_topomap(
@@ -19,10 +31,13 @@ def plot_topomap(
     show_fig=False,
     show_names=None,
 ):
+    """Render one topomap per labeled point and optionally save/show the figure."""
     ch_types = ["eeg"] * len(channel_list)
     tensor = tensor.detach().cpu().numpy()
     info = mne.create_info(ch_names=channel_list, ch_types=ch_types, sfreq=128)
-    info.set_montage(montage, match_alias=True, match_case=False, on_missing="ignore")
+    info.set_montage(
+        _get_montage(), match_alias=True, match_case=False, on_missing="ignore"
+    )
 
     num_plots = len(labeled_plot_points)
     fig, axes = plt.subplots(
@@ -46,9 +61,9 @@ def plot_topomap(
     fig.suptitle(fig_label, fontsize=24, fontweight="bold")
 
     if save_fig:
-        os.makedirs("./results", exist_ok=True)
+        os.makedirs(RESULTS_DIR, exist_ok=True)
         fig.savefig(
-            f"./results/Topomap - {fig_label}.png", dpi=300, bbox_inches="tight"
+            f"{RESULTS_DIR}/Topomap - {fig_label}.png", dpi=300, bbox_inches="tight"
         )
     if show_fig:
         fig.show()
@@ -64,19 +79,22 @@ def plot_signal(tensor, fig_label, channel_list, sampling_rate=128, save_fig=Tru
     )
 
     raw = mne.io.RawArray(tensor, info)
-    raw.set_montage(montage, match_alias=True, on_missing="ignore")
+    raw.set_montage(_get_montage(), match_alias=True, on_missing="ignore")
 
     fig = raw.plot(show_scrollbars=False, show_scalebars=False, block=True)
     fig.suptitle(fig_label, fontsize=24, fontweight="bold")
 
     if save_fig:
-        os.makedirs("./results", exist_ok=True)
-        fig.savefig(f"./results/Signal - {fig_label}.png", dpi=300, bbox_inches="tight")
+        os.makedirs(RESULTS_DIR, exist_ok=True)
+        fig.savefig(
+            f"{RESULTS_DIR}/Signal - {fig_label}.png", dpi=300, bbox_inches="tight"
+        )
 
     return fig
 
 
 def plot_emotion_connectivity(label_map, emotions, fig_label):
+    """Save a chord diagram of co-occurrence between high/low emotion pairs."""
     n = len(emotions)
     adj = torch.zeros((n * 2, n * 2))
     all_emotions = [
@@ -103,5 +121,5 @@ def plot_emotion_connectivity(label_map, emotions, fig_label):
         link_kws=dict(ec="black", lw=0.5, direction=0),
     )
 
-    os.makedirs("./results", exist_ok=True)
-    figure.savefig(f"./results/{fig_label}.png")
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    figure.savefig(f"{RESULTS_DIR}/{fig_label}.png")

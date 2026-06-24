@@ -1,7 +1,12 @@
+"""CLI argument definitions, validation, and the typed Config view."""
+
+import random
 import argparse
+from dataclasses import dataclass, field
 
 
 def get_config():
+    """Parse and validate CLI arguments into a dict."""
     # Constants for allowed values
     ALLOWED_EVALUATIONS = [
         "eeg",
@@ -25,6 +30,11 @@ def get_config():
     TRAINING_MODES = ["skip", "quick", "full"]
     ARCHITECTURES = ["CCNN", "EEGNet", "TSCeption"]
     ALLOWED_LABELS = ["valence", "arousal", "dominance", "liking"]
+    PRUNING_METHODS = ["random", "ascending", "descending"]
+    PRUNING_MODES = ["linear", "exponential"]
+    FINE_TUNING_MODES = ["ftll", "ftal", "rtll", "rtal"]
+    TRANSFER_LEARNING_MODES = ["added", "dense", "all"]
+    DEVICES = ["cpu", "cuda"]
     VERBOSE_LEVELS = ["info", "debug", "warning", "error", "critical"]
 
     parser = argparse.ArgumentParser(
@@ -120,12 +130,12 @@ def get_config():
     exp_params_group = parser.add_argument_group("Experiment-Specific Parameters")
     exp_params_group.add_argument(
         "--pruning_method",
-        choices=["random", "ascending", "descending"],
+        choices=PRUNING_METHODS,
         help="Random, ascending (nullify least-valued nodes), descending (nullify most-valued nodes).",
     )
     exp_params_group.add_argument(
         "--pruning_mode",
-        choices=["linear", "exponential"],
+        choices=PRUNING_MODES,
         help="Linear increments pruning percentage by δ till it reaches 100, whereas exponential multiplies by it.",
     )
     exp_params_group.add_argument(
@@ -136,12 +146,12 @@ def get_config():
     )
     exp_params_group.add_argument(
         "--fine_tuning_mode",
-        choices=["ftll", "ftal", "rtll", "rtal"],
+        choices=FINE_TUNING_MODES,
         help="FTLL (fine-tune last layer), FTAL (fine-tune all layers), RTLL (retrain last layer), and RTAL (retrain all layers).",
     )
     exp_params_group.add_argument(
         "--transfer_learning_mode",
-        choices=["added", "dense", "all"],
+        choices=TRANSFER_LEARNING_MODES,
         help="Add two dense layers then perform fine tuning. Added (fine-tune added layers), dense (fine-tune dense layers), and all (fine-tune all layers).",
     )
 
@@ -160,7 +170,7 @@ def get_config():
     )
     other_group.add_argument(
         "--device",
-        choices=["cpu", "cuda"],
+        choices=DEVICES,
         default="cuda",
         help="Device to run the experiment on. Default is 'cuda'.",
     )
@@ -226,3 +236,80 @@ def require_args(parser, args, arg_names, message):
 def require_arg(parser, args, arg_name, message):
     if not args.get(arg_name):
         parser.error(f"--{arg_name} {message}")
+
+
+@dataclass
+class Config:
+    """Typed view over the validated CLI arguments."""
+
+    experiment: str
+    architecture: str
+    evaluate: list
+    labels: list
+    training_mode: str
+    batch: int | None
+    epochs: int | None
+    lrate: float | None
+    update_lr_by: float
+    update_lr_every: int
+    update_lr_until: float
+    folds: int
+    data_path: str
+    base_models_dir: str | None
+    pruning_method: str | None
+    pruning_mode: str | None
+    pruning_delta: float | None
+    fine_tuning_mode: str | None
+    transfer_learning_mode: str | None
+    seed: int
+    verbose: str
+    device: str
+    # Original argparse dict, kept verbatim for the result manifest.
+    raw: dict = field(repr=False)
+
+    @property
+    def num_classes(self) -> int:
+        return 2 ** len(self.labels)
+
+    @property
+    def batch_size(self) -> int:
+        return self.batch or 32
+
+    @property
+    def working_dir(self) -> str:
+        from eegwm.constants import RESULTS_DIR
+
+        return f"{RESULTS_DIR}/{self.architecture}"
+
+
+def load_config() -> Config:
+    """Parse, validate, and seed-default the CLI arguments into a Config."""
+    args = get_config()
+    seed = args["seed"]
+    if seed is None:
+        seed = random.randint(0, 1000)
+    return Config(
+        experiment=args["experiment"],
+        architecture=args["architecture"],
+        evaluate=args["evaluate"],
+        labels=args["labels"],
+        training_mode=args["training_mode"],
+        batch=args["batch"],
+        epochs=args["epochs"],
+        lrate=args["lrate"],
+        update_lr_by=args["update_lr_by"],
+        update_lr_every=args["update_lr_every"],
+        update_lr_until=args["update_lr_until"],
+        folds=args["folds"],
+        data_path=args["data_path"],
+        base_models_dir=args["base_models_dir"],
+        pruning_method=args["pruning_method"],
+        pruning_mode=args["pruning_mode"],
+        pruning_delta=args["pruning_delta"],
+        fine_tuning_mode=args["fine_tuning_mode"],
+        transfer_learning_mode=args["transfer_learning_mode"],
+        seed=seed,
+        verbose=args["verbose"],
+        device=args["device"],
+        raw=args,
+    )

@@ -1,6 +1,17 @@
+"""Read experiment result JSONs, aggregate accuracies, and render them to console."""
+
 import json
 import numpy as np
-from utils import *
+import random
+from eegwm.utils import (
+    title,
+    add_to_dict,
+    interpolate,
+    list_json_files,
+    are_keys_numeric,
+    add_key_at_depth,
+    convert_dict_to_tree,
+)
 import plotille as plt
 from pathlib import Path
 from rich.tree import Tree
@@ -31,9 +42,9 @@ def get_rendered_pruning_results(results, fig, label=""):
 
 
 def get_graph(fig, xs, ys, i, label="Task"):
-    min, max = 0, 100
+    lo, hi = 0, 100
 
-    X = np.linspace(min, max, 100)
+    X = np.linspace(lo, hi, 100)
     f = interpolate(xs, ys)
     Y = f(X)
 
@@ -127,18 +138,18 @@ def aggregate_result(result, samples, dictionary):
 
 
 def get_results_stats(working_dir, tree):
-    dir = str(Path(working_dir))
-    json_files = list_json_files(dir)
+    base_dir = str(Path(working_dir))
+    json_files = list_json_files(base_dir)
     _get_result_stats(working_dir, json_files, tree)
 
 
 def _get_result_stats(working_dir, json_files, tree):
     results = {}
-    dir = str(Path(working_dir))
+    base_dir = str(Path(working_dir))
 
     for file_path in json_files:
         result = get_results(file_path)
-        i = file_path.index(dir) + len(dir)
+        i = file_path.index(base_dir) + len(base_dir)
         add_to_dict(results, [p for p in file_path[i:].split("/") if p], result)
 
     convert_dict_to_tree(results, tree, 1)

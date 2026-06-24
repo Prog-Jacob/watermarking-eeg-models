@@ -5,3 +5,14 @@ data/
 results/
 lightning_logs/
 *.pem
+
+# Python environments and build artifacts
+.env/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/

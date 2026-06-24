@@ -1,7 +1,11 @@
+"""Training callbacks (learning-rate schedule)."""
+
 from pytorch_lightning.callbacks import Callback
 
 
 class MultiplyLRScheduler(Callback):
+    """Multiply the learning rate by x every n epochs, clamped to [epsilon, 1]."""
+
     def __init__(self, x, n, epsilon):
         super().__init__()
         self.x = x
