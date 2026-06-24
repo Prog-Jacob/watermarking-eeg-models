@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository provides a configuration and experiment setup to apply a cryptographic watermarking method for protecting EEG-based neural networks. The watermark is embedded during the model training process to secure intellectual property, using minimal performance degradation while ensuring robustness against adversarial attacks and piracy. This code can be used to evaluate various experiments on different neural network architectures like CCNN, EEGNet, and TSCeption.
+This repository embeds a cryptographic watermark into EEG-based neural networks during training to protect their intellectual property, with minimal accuracy loss and robustness against removal attacks. It supports the CCNN, EEGNet, and TSCeption architectures and evaluates the watermark under adversarial scenarios such as fine-tuning, transfer learning, and pruning.
 <img src="https://raw.githubusercontent.com/Prog-Jacob/watermarking-eeg-models/b0c13a214abb86c4592bd4b928051db6f3b7db9f/Training.svg" alt="Embedding a wonder filter during training an EEG-based neural network" style="width: 100%">
 
 ## Key Features
@@ -10,7 +10,7 @@ This repository provides a configuration and experiment setup to apply a cryptog
 - **Watermarking Method**: Embeds cryptographic watermarks in EEG models during training with minimal impact on accuracy (≤5% drop).
 - **Experiments**: Supports multiple experiment configurations including model training, fine-tuning, pruning, and more.
 - **Adversarial Evaluation**: Evaluates watermark robustness against various adversarial scenarios like fine-tuning, transfer learning, and neuron pruning.
-- **Model Options**: Supports architectures such as CCNN, EEGNet, and TSception.
+- **Model Options**: Supports architectures such as CCNN, EEGNet, and TSCeption.
 - **Flexible Configurations**: Allows for evaluation of watermarks and model performance on various dimensions (e.g., correct watermark detection, wrong watermark, new watermark, EEG task performance).
 
 ## Installation
@@ -19,25 +19,29 @@ This repository provides a configuration and experiment setup to apply a cryptog
    ```bash
    git clone https://github.com/Prog-Jacob/watermarking-eeg-models.git
    ```
-2. Install required dependencies:
+2. Install the package and its dependencies (editable install):
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
+   ```
+   For development tooling (ruff, mypy, pytest, pre-commit):
+   ```bash
+   pip install -e ".[dev]"
    ```
 
 ## Running Experiments
 
-The experiment configurations are managed through a command-line interface. You can specify your configuration options using arguments when running the `train.py` script.
+The experiment configurations are managed through a command-line interface. You can specify your configuration options using arguments when invoking the `eegwm` package (run from the repository root, or use the installed `eegwm` console script).
 
 ### Command Syntax:
 
 ```bash
-python train.py [args]
+python -m eegwm [args]
 ```
 
 ### Available Arguments:
 
 ```
-usage: train.py [-h] --experiment {show_stats,show_stats_plots,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning,feature_attribution}
+usage: python -m eegwm [-h] --experiment {show_stats,show_stats_plots,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning,feature_attribution}
                 [--evaluate DIMENSION [DIMENSION ...]] --architecture {CCNN,EEGNet,TSCeption} [--labels LABEL [LABEL ...]] [--training_mode {skip,quick,full}] [--batch BATCH]
                 [--epochs EPOCHS] [--lrate LRATE] [--update_lr_by x] [--update_lr_every n] [--update_lr_until ε] [--folds k] [--data_path PATH] [--base_models_dir DIR]
                 [--pruning_method {random,ascending,descending}] [--pruning_mode {linear,exponential}] [--pruning_delta δ] [--fine_tuning_mode {ftll,ftal,rtll,rtal}]
@@ -96,7 +100,7 @@ Other Parameters:
 To run a quick takeover (embed attacker's watermark) experiment with a trained TSCeption model from scratch, you could use:
 
 ```bash
-python train.py --experiment new_watermark --architecture TSCeption --base_models_dir ./results/TSCeption/from_scratch/models --batch 64 --lrate 0.0005 --epochs 30 --training_mode quick
+python -m eegwm --experiment new_watermark --architecture TSCeption --base_models_dir ./results/TSCeption/from_scratch/models --batch 64 --lrate 0.0005 --epochs 30 --training_mode quick
 ```
 
 ### Skip Training and Evaluate:
@@ -104,7 +108,7 @@ python train.py --experiment new_watermark --architecture TSCeption --base_model
 If you wish to skip the training process and evaluate a previously trained model for its watermark retention, you can use:
 
 ```bash
-python train.py --experiment no_watermark --architecture CCNN --evaluate eeg correct_watermark --training_mode skip
+python -m eegwm --experiment no_watermark --architecture CCNN --evaluate eeg correct_watermark --training_mode skip
 ```
 
 ## Experiment Results
@@ -112,14 +116,28 @@ python train.py --experiment no_watermark --architecture CCNN --evaluate eeg cor
 After running experiments, the results will be output to the console and saved to file system based on the specified evaluation dimensions. You can check the evaluation of the watermarks and performance on the EEG tasks. Another way to show all results for a certain architecture is to use the `show_stats[_plots]` and `feature_attribution` experiments. For example:
 
 ```bash
-python train.py --experiment show_stats --architecture CCNN --verbose error --seed 42
-python train.py --experiment show_stats_plots --architecture EEGNet --verbose error --seed 42
-python train.py --experiment feature_attribution --architecture CCNN --base_models_dir ./results/CCNN/no_watermark/models --device cuda
+python -m eegwm --experiment show_stats --architecture CCNN --verbose error --seed 42
+python -m eegwm --experiment show_stats_plots --architecture EEGNet --verbose error --seed 42
+python -m eegwm --experiment feature_attribution --architecture CCNN --base_models_dir ./results/CCNN/no_watermark/models --device cuda
 ```
 
 The following are some samples of the these commands outputs:
 
 <img src="https://github.com/Prog-Jacob/watermarking-eeg-models/releases/download/results/show_stats_output.png" alt="Left: Example output of the show_stats experiment showing dataset and results summaries. Top Right: The effect of true/null watermark embedding on the input EEG data for the EEGNet model. Middle Right: The importance analysis of the EEG electrodes for the CCNN model. Bottom Right: Summary of the co-existence among emotion pairs in the DEAP dataset." width="100%">
+
+## Development
+
+The code lives in the `eegwm/` package. Common tasks:
+
+```bash
+pip install -e ".[dev]"   # install with dev tooling
+ruff check .              # lint
+ruff format .             # format
+pytest                    # run tests (watermark tests require torch/torcheeg)
+pre-commit install        # enable lint/format on commit
+```
+
+Package layout: `architectures/` holds one module per model (the single place to add a new architecture); `watermark/` is the cryptographic core; `data/`, `training/`, `evaluation/`, `experiments/`, and `viz/` separate concerns; `cli.py` is the entry point and `config.py` defines the typed `Config`.
 
 ## Citation
 

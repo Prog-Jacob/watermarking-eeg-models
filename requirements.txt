@@ -1,8 +1,15 @@
+# Authoritative dependency list lives in pyproject.toml; `pip install -e .` is
+# preferred. This file is kept complete for environments that expect it.
+torch==2.1.1
+scipy==1.11.4
+torcheeg==1.1.2
+pytorch_lightning
+numpy
 rsa
 rich
 shap
 plotille
 pycirclize
-torch==2.1.1
-scipy==1.11.4
-torcheeg==1.1.2
+mne
+pandas
+matplotlib

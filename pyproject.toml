@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eegwm"
+version = "0.1.0"
+description = "Watermarking EEG-based neural networks (CCNN, EEGNet, TSCeption) for IP protection"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Ahmed Abdelaziz" },
+    { name = "Ahmed Fathi" },
+    { name = "Ahmed Fares" },
+]
+
+# Direct imports across the codebase. torch / scipy / torcheeg are pinned to the
+# versions the experiments were developed against; the rest are declared because
+# they are imported directly (previously only transitive).
+dependencies = [
+    "torch==2.1.1",
+    "scipy==1.11.4",
+    "torcheeg==1.1.2",
+    "pytorch_lightning",
+    "numpy",
+    "rsa",
+    "rich",
+    "shap",
+    "plotille",
+    "pycirclize",
+    "mne",
+    "pandas",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+    "pre-commit",
+]
+
+[project.scripts]
+eegwm = "eegwm.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["eegwm*"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = true
+warn_unused_ignores = true
+# Lenient to start: the codebase is being typed incrementally.
+check_untyped_defs = false
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

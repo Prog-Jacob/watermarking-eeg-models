@@ -1,10 +1,14 @@
+"""SHAP-based feature attribution and topomap/summary plots."""
+
 import shap
 import torch
 import numpy as np
-from plot import plot_topomap
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, RandomSampler
-from dataset import get_channel_list, transform_back_to_origin
+
+from eegwm.constants import RESULTS_DIR
+from eegwm.viz.plot import plot_topomap
+from eegwm.data.dataset import get_channel_list, transform_back_to_origin
 
 
 def create_dataloader(dataset, num_samples, batch_size, device):
@@ -32,6 +36,7 @@ def get_feature_attribution(
     explain_size=100,
     batch_size=32,
 ):
+    """Compute SHAP attributions and save electrode topomaps and a summary plot."""
     model.to(device).eval()
 
     leader_size = min(leader_size, len(train_dataset))
@@ -80,4 +85,5 @@ def get_feature_attribution(
         feature_names=np.array(get_channel_list(architecture)),
         show=False,
     )
-    plt.savefig(f"./results/{fig_label}", dpi=300, bbox_inches="tight")
+    plt.savefig(f"{RESULTS_DIR}/{fig_label}", dpi=300, bbox_inches="tight")
+    plt.close()

@@ -1,3 +1,5 @@
+"""Assorted helpers: label encoding, seeding, numerics, and result rendering."""
+
 import math
 import glob
 import random
@@ -21,7 +23,7 @@ def interpolate(xs, ys):
 def is_numeric(value):
     try:
         return not math.isnan(float(value))
-    except:
+    except (TypeError, ValueError):
         return False
 
 
@@ -33,6 +35,7 @@ def list_json_files(dir):
 
 # Random Seed Configuration
 def set_seed(seed):
+    """Seed Python, NumPy, and torch (including CUDA) for reproducibility."""
     random.seed(seed)
     np.random.seed(seed)
     manual_seed(seed)
@@ -110,6 +113,8 @@ def convert_dict_to_tree(dictionary, tree, depth):
 
 
 def serialize(obj):
+    """Recursively convert objects (dicts, sequences, callables, instances) into a
+    JSON-stable structure for hashing the dataset config."""
     if isinstance(obj, dict):
         return {k: serialize(v) for k, v in obj.items()}
     elif isinstance(obj, (list, tuple)):
@@ -117,7 +122,7 @@ def serialize(obj):
         if isinstance(obj, list):
             try:
                 return sorted(obj)
-            except:
+            except TypeError:
                 return obj
         return obj
     elif hasattr(obj, "__class__") and hasattr(obj, "__dict__"):
