@@ -3,6 +3,9 @@
 torch==2.1.1
 scipy==1.11.4
 torcheeg==1.1.2
+# Pin below 2.0: py-lmdb 2.0 rejects reopening an already-open env path, which
+# torcheeg's KFold.split triggers via copy(dataset).
+lmdb==1.7.5
 pytorch_lightning
 numpy
 rsa

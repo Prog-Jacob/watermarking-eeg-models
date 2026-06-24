@@ -22,6 +22,11 @@ dependencies = [
     "torch==2.1.1",
     "scipy==1.11.4",
     "torcheeg==1.1.2",
+    # lmdb is a torcheeg dependency; pin below 2.0 because py-lmdb 2.0 rejects
+    # reopening an already-open env path, which torcheeg's KFold.split does via
+    # copy(dataset) — see eeg_signal.py __copy__. Unpinned, pip pulls 2.x and
+    # cv.split() raises "environment ... is already open in this process".
+    "lmdb==1.7.5",
     "pytorch_lightning",
     "numpy",
     "rsa",
