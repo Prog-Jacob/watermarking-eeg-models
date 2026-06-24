@@ -1,9 +1,9 @@
 __pycache__
 *.pyc
 .vscode
-data/
-results/
-lightning_logs/
+/data/
+/results/
+/lightning_logs/
 *.pem
 
 # Python environments and build artifacts

@@ -24,6 +24,7 @@ def _cfg(**overrides):
         pruning_delta=None,
         fine_tuning_mode=None,
         transfer_learning_mode=None,
+        watermark_layout="block",
         seed=42,
         verbose="info",
         device="cpu",

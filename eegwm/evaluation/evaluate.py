@@ -11,7 +11,15 @@ from eegwm.constants import VERIFICATION_SEED
 from eegwm.watermark.triggerset import TriggerSet, Verifier
 
 
-def evaluate(trainer, test_dataset, architecture, num_classes, batch_size, metrics):
+def evaluate(
+    trainer,
+    test_dataset,
+    architecture,
+    num_classes,
+    batch_size,
+    metrics,
+    layout="block",
+):
     results = dict()
     for eval_dimension in metrics:
         if eval_dimension.endswith("watermark"):
@@ -23,6 +31,7 @@ def evaluate(trainer, test_dataset, architecture, num_classes, batch_size, metri
                 num_classes=num_classes,
                 do_true_embedding=False,
                 verifier=verifier,
+                layout=layout,
             )
             true_set = TriggerSet(
                 test_dataset,
@@ -31,6 +40,7 @@ def evaluate(trainer, test_dataset, architecture, num_classes, batch_size, metri
                 num_classes=num_classes,
                 do_null_embedding=False,
                 verifier=verifier,
+                layout=layout,
             )
 
             null_set_loader = DataLoader(

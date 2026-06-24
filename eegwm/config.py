@@ -34,6 +34,7 @@ def get_config():
     PRUNING_MODES = ["linear", "exponential"]
     FINE_TUNING_MODES = ["ftll", "ftal", "rtll", "rtal"]
     TRANSFER_LEARNING_MODES = ["added", "dense", "all"]
+    WATERMARK_LAYOUTS = ["block", "scatter"]
     DEVICES = ["cpu", "cuda"]
     VERBOSE_LEVELS = ["info", "debug", "warning", "error", "critical"]
 
@@ -70,6 +71,12 @@ def get_config():
         choices=ALLOWED_LABELS,
         metavar="LABEL",
         help=f"Choose one or more dataset label from {{{','.join(ALLOWED_LABELS)}}}.",
+    )
+    config_group.add_argument(
+        "--watermark_layout",
+        default="block",
+        choices=WATERMARK_LAYOUTS,
+        help="Where the wonder-filter bits land: 'block' (contiguous corner block, the paper baseline) or 'scatter' (same bits spread across the grid). Must match between embedding and verification runs.",
     )
 
     # Training Parameters
@@ -261,6 +268,7 @@ class Config:
     pruning_delta: float | None
     fine_tuning_mode: str | None
     transfer_learning_mode: str | None
+    watermark_layout: str
     seed: int
     verbose: str
     device: str
@@ -308,6 +316,7 @@ def load_config() -> Config:
         pruning_delta=args["pruning_delta"],
         fine_tuning_mode=args["fine_tuning_mode"],
         transfer_learning_mode=args["transfer_learning_mode"],
+        watermark_layout=args["watermark_layout"],
         seed=seed,
         verbose=args["verbose"],
         device=args["device"],

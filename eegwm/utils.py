@@ -50,12 +50,6 @@ def are_keys_numeric(dictionary):
     )
 
 
-def are_values_numeric(dictionary):
-    return isinstance(dictionary, dict) and all(
-        is_numeric(value) for value in dictionary.values()
-    )
-
-
 def add_to_dict(dictionary, keys, value):
     last_key = keys.pop()
     for key in keys:

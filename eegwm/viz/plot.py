@@ -71,28 +71,6 @@ def plot_topomap(
         plt.close(fig)
 
 
-def plot_signal(tensor, fig_label, channel_list, sampling_rate=128, save_fig=True):
-    ch_types = ["misc"] * len(channel_list)
-    tensor = tensor.detach().cpu().numpy()
-    info = mne.create_info(
-        ch_names=channel_list, ch_types=ch_types, sfreq=sampling_rate
-    )
-
-    raw = mne.io.RawArray(tensor, info)
-    raw.set_montage(_get_montage(), match_alias=True, on_missing="ignore")
-
-    fig = raw.plot(show_scrollbars=False, show_scalebars=False, block=True)
-    fig.suptitle(fig_label, fontsize=24, fontweight="bold")
-
-    if save_fig:
-        os.makedirs(RESULTS_DIR, exist_ok=True)
-        fig.savefig(
-            f"{RESULTS_DIR}/Signal - {fig_label}.png", dpi=300, bbox_inches="tight"
-        )
-
-    return fig
-
-
 def plot_emotion_connectivity(label_map, emotions, fig_label):
     """Save a chord diagram of co-occurrence between high/low emotion pairs."""
     n = len(emotions)
