@@ -42,10 +42,10 @@ python -m eegwm [args]
 
 ```
 usage: python -m eegwm [-h] --experiment {show_stats,show_stats_plots,no_watermark,from_scratch,pretrain,new_watermark,pruning,fine_tuning,quantization,transfer_learning,feature_attribution}
-                [--evaluate DIMENSION [DIMENSION ...]] --architecture {CCNN,EEGNet,TSCeption} [--labels LABEL [LABEL ...]] [--training_mode {skip,quick,full}] [--batch BATCH]
+                [--evaluate DIMENSION [DIMENSION ...]] --architecture {CCNN,EEGNet,TSCeption} [--labels LABEL [LABEL ...]] [--watermark_layout {block,scatter}] [--training_mode {skip,quick,full}] [--batch BATCH]
                 [--epochs EPOCHS] [--lrate LRATE] [--update_lr_by x] [--update_lr_every n] [--update_lr_until ε] [--folds k] [--data_path PATH] [--base_models_dir DIR]
                 [--pruning_method {random,ascending,descending}] [--pruning_mode {linear,exponential}] [--pruning_delta δ] [--fine_tuning_mode {ftll,ftal,rtll,rtal}]
-                [--transfer_learning_mode {added,dense,all}] [--watermark_layout {block,scatter}] [--seed SEED] [--verbose {info,debug,warning,error,critical}] [--device {cpu,cuda}]
+                [--transfer_learning_mode {added,dense,all}] [--seed SEED] [--verbose {info,debug,warning,error,critical}] [--device {cpu,cuda}]
 
 Configure and run experiments for watermarking EEG-based neural networks.
 
@@ -60,6 +60,8 @@ Experiment Configuration:
   --architecture {CCNN,EEGNet,TSCeption}
   --labels LABEL [LABEL ...]
                         Choose one or more dataset label from {valence,arousal,dominance,liking}.
+  --watermark_layout {block,scatter}
+                        Where the wonder-filter bits land: 'block' (contiguous corner block, the paper baseline) or 'scatter' (same bits spread across the grid). Must match between embedding and verification runs.
 
 Training Parameters:
   --training_mode {skip,quick,full}
@@ -87,8 +89,6 @@ Experiment-Specific Parameters:
                         FTLL (fine-tune last layer), FTAL (fine-tune all layers), RTLL (retrain last layer), and RTAL (retrain all layers).
   --transfer_learning_mode {added,dense,all}
                         Add two dense layers then perform fine tuning. Added (fine-tune added layers), dense (fine-tune dense layers), and all (fine-tune all layers).
-  --watermark_layout {block,scatter}
-                        Where the wonder-filter bits land: 'block' (contiguous corner block, the paper baseline) or 'scatter' (same bits spread across the grid). Must match between embedding and verification runs.
 
 Other Parameters:
   --seed SEED           Seed for reproducibility.

@@ -72,6 +72,12 @@ def get_config():
         metavar="LABEL",
         help=f"Choose one or more dataset label from {{{','.join(ALLOWED_LABELS)}}}.",
     )
+    config_group.add_argument(
+        "--watermark_layout",
+        default="block",
+        choices=WATERMARK_LAYOUTS,
+        help="Where the wonder-filter bits land: 'block' (contiguous corner block, the paper baseline) or 'scatter' (same bits spread across the grid). Must match between embedding and verification runs.",
+    )
 
     # Training Parameters
     train_group = parser.add_argument_group("Training Parameters")
@@ -154,13 +160,6 @@ def get_config():
         "--transfer_learning_mode",
         choices=TRANSFER_LEARNING_MODES,
         help="Add two dense layers then perform fine tuning. Added (fine-tune added layers), dense (fine-tune dense layers), and all (fine-tune all layers).",
-    )
-
-    exp_params_group.add_argument(
-        "--watermark_layout",
-        default="block",
-        choices=WATERMARK_LAYOUTS,
-        help="Where the wonder-filter bits land: 'block' (contiguous corner block, the paper baseline) or 'scatter' (same bits spread across the grid). Must match between embedding and verification runs.",
     )
 
     # Other Parameters
