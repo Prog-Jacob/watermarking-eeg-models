@@ -18,7 +18,7 @@ def _show_stats(cfg: Config, dataset) -> None:
     from eegwm.data.stats import get_dataset_stats, get_dataset_plots
 
     if cfg.experiment.endswith("plots"):
-        get_dataset_plots(dataset, cfg.architecture)
+        get_dataset_plots(dataset, cfg.architecture, cfg.watermark_layout)
 
     tree = Tree(
         f"[bold cyan]\nStatistics and Results for {cfg.architecture}[/bold cyan]"

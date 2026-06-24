@@ -54,34 +54,48 @@ def create_signature(verifier_string, private_key):
     return b64encode(signature).decode("UTF-8")
 
 
-def transform(signature, channels, num_classes):
-    """Hash the signature into a deterministic binary filter pattern and label."""
+def transform(signature, channels, num_classes, layout="block"):
+    """Hash the signature into a deterministic binary filter pattern and label.
+
+    The label, bit count, and bit content are identical across layouts; only the
+    placement of the bits differs. ``block`` stacks them in a contiguous corner
+    block (the paper baseline); ``scatter`` spreads the same bits across the whole
+    grid at deterministic, signature-derived positions.
+    """
     pattern = np.zeros(channels)
     label = h1(signature) % num_classes
 
     pattern_width = math.ceil(channels[0] / 8)
     pattern_height = math.ceil(channels[1] / 8)
     pattern_size = pattern_width * pattern_height
-
-    posi = h3(signature) % (channels[0] - pattern_width + 1)
-    posj = h4(signature) % (channels[1] - pattern_height + 1)
     bits = "{0:b}".format(h2(signature) % (2**pattern_size)).zfill(pattern_size)
 
-    for i in range(pattern_width):
-        for j in range(pattern_height):
-            pattern[posi + i][posj + j] = int(bits[i * pattern_height + j]) * 2 - 1
+    if layout == "scatter":
+        rng = random.Random(h3(signature) ^ h4(signature))
+        positions = rng.sample(range(channels[0] * channels[1]), pattern_size)
+        for bit, flat in zip(bits, positions):
+            i, j = divmod(flat, channels[1])
+            pattern[i][j] = int(bit) * 2 - 1
+    else:
+        posi = h3(signature) % (channels[0] - pattern_width + 1)
+        posj = h4(signature) % (channels[1] - pattern_height + 1)
+        for i in range(pattern_width):
+            for j in range(pattern_height):
+                pattern[posi + i][posj + j] = int(bits[i * pattern_height + j]) * 2 - 1
 
     return torch.from_numpy(pattern), label
 
 
-def get_watermark(architecture, verifier_string, private_key, num_classes=16):
+def get_watermark(
+    architecture, verifier_string, private_key, num_classes=16, layout="block"
+):
     """Return the model-shaped watermark filter and its target label."""
     from eegwm.architectures import get_architecture
 
     arch = get_architecture(architecture)
     signature = create_signature(verifier_string, private_key)
     wm_filter, wm_label = transform(
-        signature.encode("UTF-8"), arch.watermark_shape, num_classes
+        signature.encode("UTF-8"), arch.watermark_shape, num_classes, layout
     )
     wm_filter = torch.tensor(arch.reshape_watermark(wm_filter), dtype=torch.float32)
     return wm_filter, wm_label
@@ -123,10 +137,11 @@ class TriggerSet(Dataset):
         do_null_embedding=True,
         include_train_set=False,
         verifier=Verifier.CORRECT,
+        layout="block",
     ):
         _, private_key = load_keys()
         filter, wm_label = get_watermark(
-            architecture, verifier.value, private_key, num_classes
+            architecture, verifier.value, private_key, num_classes, layout
         )
 
         random.seed(seed)

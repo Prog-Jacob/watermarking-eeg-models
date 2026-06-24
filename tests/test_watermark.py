@@ -36,6 +36,25 @@ def test_watermark_is_deterministic(arch, private_key):
 
 
 @pytest.mark.parametrize("arch", ARCHITECTURES)
+def test_scatter_layout_keeps_label_and_bit_count(arch, private_key):
+    block, block_label = get_watermark(
+        arch, Verifier.CORRECT.value, private_key, 16, layout="block"
+    )
+    s1, scatter_label = get_watermark(
+        arch, Verifier.CORRECT.value, private_key, 16, layout="scatter"
+    )
+    s2, _ = get_watermark(
+        arch, Verifier.CORRECT.value, private_key, 16, layout="scatter"
+    )
+    # Same label and same number of active cells; only the placement moves.
+    assert scatter_label == block_label
+    assert (s1 != 0).sum() == (block != 0).sum()
+    # Deterministic across calls, but a different footprint than the block.
+    assert torch.equal(s1, s2)
+    assert not torch.equal(s1, block)
+
+
+@pytest.mark.parametrize("arch", ARCHITECTURES)
 def test_true_embedding_relabels_sample(arch, private_key):
     wm_filter, wm_label = get_watermark(arch, Verifier.CORRECT.value, private_key, 16)
     sample = torch.zeros_like(wm_filter)

@@ -86,6 +86,7 @@ def run(cfg: Config, dataset, cv) -> None:
                 num_classes,
                 batch_size,
                 cfg.evaluate,
+                cfg.watermark_layout,
             )
 
         if experiment == "pruning":
@@ -183,6 +184,7 @@ def run(cfg: Config, dataset, cv) -> None:
                 num_classes=num_classes,
                 include_train_set=True,
                 verifier=verifier,
+                layout=cfg.watermark_layout,
             )
             trigger_set = TriggerSet(
                 train_dataset,
@@ -191,6 +193,7 @@ def run(cfg: Config, dataset, cv) -> None:
                 num_classes=num_classes,
                 include_train_set=True,
                 verifier=verifier,
+                layout=cfg.watermark_layout,
             )
         if cfg.training_mode != "skip":
             from pytorch_lightning.callbacks import (
