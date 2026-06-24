@@ -30,12 +30,6 @@ def _show_stats(cfg: Config, dataset) -> None:
 
 def main() -> None:
     """Parse config, set up logging and seed, build the dataset, and dispatch."""
-    # Heavy imports are deferred to keep `--help` and config errors fast.
-    from torcheeg.model_selection import KFold
-
-    from eegwm.utils import set_seed
-    from eegwm.data.dataset import get_dataset
-
     cfg = load_config()
 
     level = getattr(logging, cfg.verbose.upper())
@@ -55,6 +49,11 @@ def main() -> None:
         cfg.architecture,
         cfg.seed,
     )
+
+    # Heavy imports are deferred so `--help` and config errors stay fast.
+    from torcheeg.model_selection import KFold
+    from eegwm.utils import set_seed
+    from eegwm.data.dataset import get_dataset
 
     set_seed(cfg.seed)
     os.makedirs(cfg.working_dir, exist_ok=True)
