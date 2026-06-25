@@ -212,18 +212,22 @@ def run(cfg: Config, dataset, cv) -> None:
                 cfg.update_lr_by, cfg.update_lr_every, cfg.update_lr_until
             )
 
+            # num_workers MUST stay 0: the dataset is lmdb-backed, and torcheeg's
+            # lmdb env is not fork-safe. With workers>0 the forked processes share
+            # the env and concurrent reads corrupt memory — manifesting as a worker
+            # segfault or a garbage-shaped batch (e.g. [4,255,9] among [4,9,9]).
+            # from_scratch/etc. survive only because TriggerSet materializes samples
+            # in the main process; fine_tuning/transfer_learning read raw lmdb here.
             val_loader = DataLoader(
                 val_dataset,
                 batch_size=batch_size,
-                prefetch_factor=2,
-                num_workers=2,
+                num_workers=0,
             )
             train_loader = DataLoader(
                 trigger_set,
                 shuffle=True,
                 batch_size=batch_size,
-                prefetch_factor=2,
-                num_workers=2,
+                num_workers=0,
             )
 
             trainer.fit(

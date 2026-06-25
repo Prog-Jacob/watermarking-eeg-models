@@ -46,14 +46,12 @@ def evaluate(
             null_set_loader = DataLoader(
                 null_set,
                 batch_size=batch_size,
-                prefetch_factor=2,
-                num_workers=2,
+                num_workers=0,
             )
             true_set_loader = DataLoader(
                 true_set,
                 batch_size=batch_size,
-                prefetch_factor=2,
-                num_workers=2,
+                num_workers=0,
             )
 
             results[eval_dimension] = {
@@ -64,8 +62,7 @@ def evaluate(
             test_loader = DataLoader(
                 test_dataset,
                 batch_size=batch_size,
-                prefetch_factor=2,
-                num_workers=2,
+                num_workers=0,
             )
             results[eval_dimension] = trainer.test(
                 test_loader, enable_model_summary=True
