@@ -215,15 +215,13 @@ def run(cfg: Config, dataset, cv) -> None:
             val_loader = DataLoader(
                 val_dataset,
                 batch_size=batch_size,
-                prefetch_factor=2,
-                num_workers=2,
+                num_workers=0,
             )
             train_loader = DataLoader(
                 trigger_set,
                 shuffle=True,
                 batch_size=batch_size,
-                prefetch_factor=2,
-                num_workers=2,
+                num_workers=0,
             )
 
             trainer.fit(

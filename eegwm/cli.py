@@ -32,15 +32,6 @@ def main() -> None:
     """Parse config, set up logging and seed, build the dataset, and dispatch."""
     cfg = load_config()
 
-    # DataLoader workers pass tensors between processes via shared memory; the
-    # default file_descriptor strategy uses /dev/shm, which is tiny on hosts like
-    # Kaggle (~64 MB) and aborts workers ("DataLoader worker killed by signal:
-    # Aborted") once it fills across sequential runs. file_system shares via /tmp
-    # instead. Imported here (not at module top) to keep `eegwm -h` torch-free.
-    import torch.multiprocessing as torch_mp
-
-    torch_mp.set_sharing_strategy("file_system")
-
     level = getattr(logging, cfg.verbose.upper())
     logging.getLogger("torcheeg").setLevel(level)
     log = logging.getLogger("eegwm")
